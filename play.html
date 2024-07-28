@@ -62,96 +62,102 @@
 
   <div class="container mt-5 col-lg-8">
 
-    <!-- cards -->
-    <div class="card border-primary shadow">
-      <div class="card-top">
-        <div class="rounded d-flex justify-content-between mx-2">
-          <div class="bg-white d-inline-block">
-            <button class="btn btn-sm btn-outline-primary">@122 </button>
-            <button class="btn btn-sm btn-primary">
-              <span class="me-1">#markdown</span>
-              <i class="bi bi-markdown"></i>
+    <div class="settings">
+            
+    </div>
+
+    <div class="draft">
+      <div class="card border-primary shadow">
+        <div class="card-top">
+          <div class="rounded d-flex justify-content-between mx-2">
+            <div class="bg-white d-inline-block">
+              <button class="btn btn-sm btn-outline-primary">@122 </button>
+              <button class="btn btn-sm btn-primary">
+                <span class="me-1">#markdown</span>
+                <i class="bi bi-markdown"></i>
+              </button>
+            </div>
+
+            <div class="bg-white d-inline-block">
+              <button class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-pin"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-chevron-up"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-chevron-down"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-success"
+                onclick="goToEditMode(this.parentElement.parentElement.parentElement.parentElement)">
+                <i class="bi bi-pen"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-success"
+                onclick="goToViewMode(this.parentElement.parentElement.parentElement.parentElement)">
+                <i class="bi bi-eye"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash2"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body p-2">
+          <div class="edit-mode">
+            <textarea oninput="onTextAreaInput(this, event)" onkeyup="onTextAreaKeyup(this, event)" class="form-control"
+              id="" rows="3">
+
+
+            # this is text title
+            
+            </textarea>
+
+
+            <label for="">text direction</label>
+            <select name="" id="" class="form-control">
+              <option value="auto">auto</option>
+              <option value="rtl">rtl</option>
+              <option value="ltr">ltr</option>
+            </select>
+
+            <label for="">text align</label>
+            <select name="" id="" class="form-control">
+              <option value="auto">auto</option>
+              <option value="center">center</option>
+              <option value="left">left</option>
+              <option value="right">right</option>
+            </select>
+          </div>
+          <div class="view-mode" ondblclick="goToEditMode(this.parentElement)">
+          </div>
+        </div>
+      </div>
+
+
+      <div class="sep mt-2">
+        <div class="d-flex justify-content-center align-items-center">
+          <div class="bg-white mx-1">
+            <button class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-plus"></i>
             </button>
           </div>
 
-          <div class="bg-white d-inline-block">
-            <button class="btn btn-sm btn-outline-primary">
-              <i class="bi bi-pin"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-primary">
-              <i class="bi bi-chevron-up"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-primary">
-              <i class="bi bi-chevron-down"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-success"
-              onclick="goToEditMode(this.parentElement.parentElement.parentElement.parentElement)">
-              <i class="bi bi-pen"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-success"
-              onclick="goToViewMode(this.parentElement.parentElement.parentElement.parentElement)">
-              <i class="bi bi-eye"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-danger">
-              <i class="bi bi-trash2"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="card-body p-2">
-        <div class="edit-mode">
-          <textarea oninput="onTextAreaInput(this, event)" onkeyup="onTextAreaKeyup(this, event)" class="form-control"
-            id="" rows="3">
-
-
-          # this is text title
-          
-          </textarea>
-
-
-          <label for="">text direction</label>
-          <select name="" id="" class="form-control">
-            <option value="auto">auto</option>
-            <option value="rtl">rtl</option>
-            <option value="ltr">ltr</option>
+          <select name="" id="" class="mx-1 form-control border-primary form-control-sm component-select">
+            <option value="">markdown</option>
+            <option value="">code</option>
+            <option value="">image</option>
+            <option value="">video</option>
+            <option value="">table</option>
+            <option value="">html</option>
+            <option value="">frame</option>
+            <option value="">github</option>
           </select>
 
-          <label for="">text align</label>
-          <select name="" id="" class="form-control">
-            <option value="auto">auto</option>
-            <option value="center">center</option>
-            <option value="left">left</option>
-            <option value="right">right</option>
-          </select>
         </div>
-        <div class="view-mode" ondblclick="goToEditMode(this.parentElement)">
-        </div>
+        <div class="border"></div>
       </div>
+
     </div>
-
-    <div class="sep mt-2">
-      <div class="d-flex justify-content-center align-items-center">
-        <div class="bg-white mx-1">
-          <button class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-plus"></i>
-          </button>
-        </div>
-
-        <select name="" id="" class="mx-1 form-control border-primary form-control-sm component-select">
-          <option value="">markdown</option>
-          <option value="">code</option>
-          <option value="">image</option>
-          <option value="">video</option>
-          <option value="">table</option>
-          <option value="">html</option>
-          <option value="">frame</option>
-          <option value="">github</option>
-        </select>
-
-      </div>
-      <div class="border"></div>
-    </div>
-
 
   </div>
 </body>

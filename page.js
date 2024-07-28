@@ -1,3 +1,5 @@
+// utils --------------------------------------
+
 function q(sel) {
   // alias
   return document.querySelector(sel)
@@ -31,18 +33,21 @@ function clsx(el, cls, cond) {
     el.classList.remove(cls)
 }
 
+// impl --------------------------------------------
+
 function changeMode(papa, editMode) {
   // console.log(papa)
   let em = papa.querySelector('.edit-mode')
   let vm = papa.querySelector('.view-mode')
+  let tt = em.querySelector('textarea')
 
   clsx(em, 'd-none', !editMode)
   clsx(vm, 'd-none', editMode)
-  vm.innerHTML = marked.parse(em.querySelector('textarea').value)
+
+  vm.innerHTML = marked.parse(tt.value)
 }
 
 function onTextAreaKeyup(element, event) {
-  // console.log(event)
   if (event.key == "Escape") {
     element.blur()
     changeMode(element.parentElement.parentElement, false)
@@ -57,6 +62,8 @@ function goToViewMode(el) {
 function goToEditMode(el) {
   changeMode(el, true)
 }
+
+// init ---------------------------------------------
 
 toArray(qa('textarea')).forEach(element => {
   setHeight(element)

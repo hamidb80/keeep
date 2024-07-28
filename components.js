@@ -1,11 +1,17 @@
+// params: {
+//   inline: "bool"
+// },
+
+
 let components = [
   {
     name: "markdown",
-    icon: "bi-md",
-    data: {
+    aliases: ["md"],
+    icon: "bi bi-md",
+    states: {
       content: "string",
-      text_dir: "string",
-      text_align: "string",
+      dir: "string",
+      align: "string",
     },
     settings: [
       {
@@ -28,9 +34,10 @@ let components = [
       },
     ],
     template: `
-      <div style="
-        text-direction: {dir};
-        text-align:     {align};
+      <div 
+        style="
+          text-direction: {dir};
+          text-align:     {align};
       ">
         {content|markdown2html}
       </div>
