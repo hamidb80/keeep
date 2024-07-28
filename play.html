@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jupyter Like</title>
+
+  <link rel="stylesheet" href="https://bootswatch.com/5/zephyr/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <script src="./page.js"></script>
+</head>
+
+<style>
+  .card-top {
+    margin-top: -10px;
+  }
+</style>
+
+<body>
+
+  <nav class="navbar navbar-dark bg-primary px-4 pb-2 pt-1 shadow d-flex flex-row justify-content-center">
+    <!-- <a class="navbar-brand" href="#">Mars</a> -->
+    <ul class="navbar-nav me-auto mt-2 d-flex flex-row m-auto">
+      <li class="nav-item">
+        <a class="nav-link active" href="#">
+          edit
+          <i class="bi bi-pen"></i>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">
+          Preview
+          <i class="bi bi-eye"></i>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="container mt-5 col-lg-8">
+
+    <div class="card border-primary shadow">
+      <div class="card-top">
+        <span class="btn btn-sm btn-primary">#header </span>
+        <span class="btn btn-sm btn-outline-danger">
+          <i class="bi bi-trash2"></i>
+        </span>
+      </div>
+      <div class="card-body p-2">
+        <textarea oninput="autoheight(this)" class="form-control" name="" id="" rows="3"></textarea>
+      </div>
+    </div>
+
+
+
+  </div>
+</body>
+
+</html>
