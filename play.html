@@ -21,6 +21,22 @@
   textarea {
     overflow: hidden;
   }
+
+  .sep .border {
+    margin-top: -16px;
+  }
+
+  .component-select {
+    width: 200px;
+  }
+
+  .sep {
+    opacity: 0.3;
+  }
+
+  .sep:hover {
+    opacity: 1;
+  }
 </style>
 
 <body>
@@ -50,32 +66,46 @@
       <div class="card-top">
         <div class="rounded d-flex justify-content-between mx-2">
           <div class="bg-white d-inline-block">
-            <div class="btn btn-sm btn-outline-primary">@122 </div>
-            <div class="btn btn-sm btn-primary">
+            <button class="btn btn-sm btn-outline-primary">@122 </button>
+            <button class="btn btn-sm btn-primary">
               <span class="me-1">#header</span>
               <i class="bi bi-type-h1"></i>
-            </div>
+            </button>
           </div>
 
           <div class="bg-white d-inline-block">
-            <div class="btn btn-sm btn-outline-success"
+            <button class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-pin"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-chevron-up"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-chevron-down"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-success"
               onclick="goToEditMode(this.parentElement.parentElement.parentElement.parentElement)">
               <i class="bi bi-pen"></i>
-            </div>
-            <div class="btn btn-sm btn-outline-success"
+            </button>
+            <button class="btn btn-sm btn-outline-success"
               onclick="goToViewMode(this.parentElement.parentElement.parentElement.parentElement)">
               <i class="bi bi-eye"></i>
-            </div>
-            <div class="btn btn-sm btn-outline-danger">
+            </button>
+            <button class="btn btn-sm btn-outline-danger">
               <i class="bi bi-trash2"></i>
-            </div>
+            </button>
           </div>
         </div>
       </div>
       <div class="card-body p-2">
         <div class="edit-mode">
           <textarea oninput="onTextAreaInput(this, event)" onkeyup="onTextAreaKeyup(this, event)" class="form-control"
-            id="" rows="3"></textarea>
+            id="" rows="3">
+
+
+          # this is text title
+          
+          </textarea>
 
 
           <label for="">text direction</label>
@@ -97,6 +127,30 @@
         </div>
       </div>
     </div>
+
+    <div class="sep mt-2">
+      <div class="d-flex justify-content-center align-items-center">
+        <div class="bg-white mx-1">
+          <button class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-plus"></i>
+          </button>
+        </div>
+
+        <select name="" id="" class="mx-1 form-control border-primary form-control-sm component-select">
+          <option value="">markdown</option>
+          <option value="">code</option>
+          <option value="">image</option>
+          <option value="">video</option>
+          <option value="">table</option>
+          <option value="">html</option>
+          <option value="">frame</option>
+          <option value="">github</option>
+        </select>
+
+      </div>
+      <div class="border"></div>
+    </div>
+
 
   </div>
 </body>
