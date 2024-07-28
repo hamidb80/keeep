@@ -42,28 +42,42 @@
 <body>
 
   <nav class="navbar navbar-dark bg-primary px-4 pb-2 pt-1 shadow d-flex flex-row justify-content-center">
-    <!-- <a class="navbar-brand" href="#">Mars</a> -->
     <ul class="navbar-nav me-auto mt-2 d-flex flex-row m-auto">
       <li class="nav-item">
-        <a class="nav-link" href="#">
+        <button class="nav-link">
           settings
           <i class="bi bi-nut-fill"></i>
-        </a>
+        </button>
       </li>
 
       <li class="nav-item">
-        <a class="nav-link active" href="#">
+        <button class="nav-link">
+          outline
+          <i class="bi bi-list-ul"></i>
+        </button>
+      </li>
+
+      <li class="nav-item">
+        <button class="nav-link active">
           draft
           <i class="bi bi-pencil-square"></i>
-        </a>
+        </button>
       </li>
+
+      <li class="nav-item">
+        <button class="nav-link">
+          publish
+          <i class="bi bi-box-arrow-up"></i>
+        </button>
+      </li>
+
     </ul>
   </nav>
 
   <div class="container mt-5 col-lg-8">
 
     <div class="settings">
-            
+
     </div>
 
     <div class="draft">
@@ -79,9 +93,6 @@
             </div>
 
             <div class="bg-white d-inline-block">
-              <button class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-pin"></i>
-              </button>
               <button class="btn btn-sm btn-outline-primary">
                 <i class="bi bi-chevron-up"></i>
               </button>
@@ -102,7 +113,7 @@
             </div>
           </div>
         </div>
-        <div class="card-body p-2">
+        <div class="card-body py-2 px-3">
           <div class="edit-mode">
             <textarea oninput="onTextAreaInput(this, event)" onkeyup="onTextAreaKeyup(this, event)" class="form-control"
               id="" rows="3">
