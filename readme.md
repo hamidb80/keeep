@@ -24,6 +24,7 @@ Rethinking note taking!
 - save in local-storage (can asked to download or import)
 - github pages sharable
 - compress images of size more than treshhild with `.webp` format
+- tag style customize
 
 ## Tech stack
 

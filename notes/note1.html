@@ -1,75 +1,73 @@
+<!-- FireFox said -->
+
+<!DOCTYPE html>
+
 <!-- for preview -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
 
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
 
-<style>
-  article {
-    max-width: 50vw;
-    margin: auto;
-    border: 1px solid black;
-    border-radius: 8px;
-    padding: 10px 20px;
-  }
+  <script src="https://cdn.jsdelivr.net/npm/unpoly@3.8.0/unpoly.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/unpoly@3.8.0/unpoly.min.css">
 
-  article {
-    font-family: "Vazirmatn", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 300;
-    font-style: normal;
-  }
+  <link rel="stylesheet" href="https://bootswatch.com/5/zephyr/bootstrap.min.css">
 
-  article h1 {
-    text-align: center;
-  }
-
-  article img {
-    max-width: 100%;
-    max-height: 80vh;
-  }
-</style>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./page.js" defer></script>
+</head>
 
 <!-- begins -->
 
-<article>
-  <h1 dir="auto">
-    صفحه نمایش
-    BitZee
-  </h1>
+<body class="bg-light">
 
-  <p dir="auto">
-    صفحه نمایش این دستگاه
-    از تعداد کمی پیکسل
-    روی یک سطر تشکیل شده.
 
-    این یک سطر پیکسل توسط صفحه کوچکی دائم در حال حرکت است
-    و به شما توهم یک صفحه دو بعدی را می‌دهد
-  </p>
+  <article class="mt-4 card mx-auto shadow-sm rounded p-3">
 
-  <figure>
-    <img src="./image.webp" alt="">
-    <figcaption>
-      <ul>
-        <li>
-          <a href="https://www.youtube.com/watch?v=3Ea5cx6dM48">
-            https://www.youtube.com/watch?v=3Ea5cx6dM48
-          </a>
-        </li>
-        <li>
-          <a href="https://www.youtube.com/watch?v=bQc_rQpMJWk">
-            https://www.youtube.com/watch?v=bQc_rQpMJWk
-          </a>
-        </li>
-      </ul>
-    </figcaption>
-  </figure>
+    <h1 dir="auto">
+      صفحه نمایش
+      BitZee
+    </h1>
 
-</article>
+    <p dir="auto">
+      صفحه نمایش این دستگاه
+      از تعداد کمی پیکسل
+      روی
+      <em>
+        یک سطر
+      </em>
+      تشکیل شده.
 
-<tags>
-  #fun
-  #technology
-  #monitor
-  #pixel_art
-</tags>
+      این یک سطر پیکسل توسط صفحه کوچکی دائم در حال حرکت است
+      و به شما توهم یک صفحه دو بعدی را می‌دهد
+    </p>
+
+    <figure>
+      <img src="./image.webp" width="900px">
+      <figcaption>
+        <ul>
+          <li>
+            <a href="https://www.youtube.com/watch?v=3Ea5cx6dM48">
+              https://www.youtube.com/watch?v=3Ea5cx6dM48
+            </a>
+          </li>
+          <li>
+            <a href="https://www.youtube.com/watch?v=bQc_rQpMJWk">
+              https://www.youtube.com/watch?v=bQc_rQpMJWk
+            </a>
+          </li>
+        </ul>
+      </figcaption>
+    </figure>
+
+    <footer class="tags">
+      #fun
+      #technology
+      #monitor
+      #pixel_art
+      #remember
+    </footer>
+  </article>
+
+</body>
