@@ -11,6 +11,7 @@ Rethinking note taking!
 
 ## Motives
 - `.epub` is HTML
+- Google Keep
 
 ## Critics
 - [damn Markdown, Long live HTML](https://joshondesign.com/2019/06/28/markdown_vs_html) 📝
@@ -36,7 +37,7 @@ Rethinking note taking!
 - JavaScript 
 
 ### UI
-- [Bootstrap sIcons](https://icons.getbootstrap.com/)
+- [Bootstrap Icons](https://icons.getbootstrap.com/)
 - [Bootswatch](https://bootswatch.com/) Themes
 
 ## Resources
