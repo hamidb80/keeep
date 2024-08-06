@@ -1,4 +1,4 @@
-> harness knowledge by writing it - *Mohammad the prophet (PBUH)*
+> harness knowledge by writing it - *Mohammad the prophet ([PBUH](https://www.youtube.com/watch?v=J79qPsj9ktI))*
 
 # Keeep
 Rethinking note taking!
@@ -7,6 +7,7 @@ Rethinking note taking!
 - Keep It Stupid Simple
 - [Hyper Media Systems](https://hypermedia.systems/) 📚
 - Don’t get in the programmer’s way - [Zen of Nim](https://nim-lang.org/blog/2021/11/15/zen-of-nim.html)
+- Customizable
 
 ## Motives
 - `.epub` is HTML
