@@ -41,5 +41,5 @@ Rethinking note taking!
 - [Bootswatch](https://bootswatch.com/) Themes
 
 ## Resources
-- [HTML elements reference](https://developer.mozilla.org/en-US/docs/Web/HTML/Element)
 - [Content Categories](https://developer.mozilla.org/en-US/docs/Web/HTML/Content_categories)
+- [SVG tags](https://developer.mozilla.org/en-US/docs/Web/SVG/Element)
