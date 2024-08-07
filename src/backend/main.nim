@@ -150,7 +150,7 @@ proc loadHtmlTemplates(p): Table[string, XmlNode] =
         raisev "only <template> is allowed in top level"
 
 
-func toHtml(n; templates: Table[string, XmlNode]): XmlNode = 
+func renderHtml(n; templates: Table[string, XmlNode]): XmlNode = 
   let tmpl = templates[noteViewTemplate]
   # traverse tmpl to build
   # extract params
@@ -162,7 +162,7 @@ when isMainModule:
   for p in discover Path "./notes":
     let 
       doc  = parseHtmlFromFile p
-      html = toHtml(initNode doc, tmpls)
+      html = renderHtml(initNode doc, tmpls)
 
     writeFile "play.html", $html
 
@@ -186,4 +186,3 @@ when isMainModule:
 #   note view:
 #     content
 #     buttuns forr remembering
-
