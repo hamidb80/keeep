@@ -18,6 +18,7 @@ type
 
 
   Note* = object
+    path*     : Path         ## original file path
     timestamp*: Datetime
     # title*: string
     content*: XmlNode
@@ -47,7 +48,7 @@ template raisev(msg): untyped {.dirty.} =
   raise newException(ValueError, msg)
 
 template impossible: untyped = 
-  raise newException(KeyError, "this region of code is impossible to reach, if so, seems there are logical bugs")
+  raise newException(KeyError, "this region of code must be unreachable, if note, there are some wrong reasoning in the code")
 
 template iff(cond, iftrue, iffalse): untyped = 
   if cond: iftrue
@@ -158,7 +159,7 @@ func renderHtml(n; templates: Table[string, XmlNode]): XmlNode =
 
 when isMainModule:
   let tmpls = loadHtmlTemplates Path "./templates.html"
-
+  echo tmpls
   for p in discover Path "./notes":
     let 
       doc  = parseHtmlFromFile p

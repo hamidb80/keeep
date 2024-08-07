@@ -1,32 +1,26 @@
-<template name="head">
+<template name="common-head">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
 
-  <head>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/unpoly@3.8.0/unpoly.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/unpoly@3.8.0/unpoly.min.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/unpoly@3.8.0/unpoly.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/unpoly@3.8.0/unpoly.min.css">
+  <link rel="stylesheet" href="https://bootswatch.com/5/zephyr/bootstrap.min.css">
 
-    <link rel="stylesheet" href="https://bootswatch.com/5/zephyr/bootstrap.min.css">
-
-    <link rel="stylesheet" href="./style.css">
-    <script src="./page.js" defer></script>
-
-    <title>
-      <slot name="title"></slot>
-    </title>
-
-  </head>
-
+  <link rel="stylesheet" href="./style.css">
+  <script src="./page.js" defer></script>
 </template>
 
 <template name="note-view">
-  
-  <use template="head">
-    <param name="title">article page</param>
-  </use>
+  <head>
+    <use template="common-head"></use>
+    <title>note page</title>
+  </head>
 
+  <body>
+    <param name="note">
+  </body>
 </template>
 
 <template name="about-page">
