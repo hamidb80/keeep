@@ -34,6 +34,9 @@ using
 func initHashTag(name, val: string): HashTag = 
   HashTag(name: name, value: val)
 
+
+
+
 # ---------------------------------------
 
 template `<<`(smth): untyped {.dirty.} =
@@ -45,7 +48,15 @@ template raisev(msg): untyped {.dirty.} =
 template impossible: untyped = 
   raise newException(KeyError, "this region of code is impossible to reach, if so, seems there are logical bugs")
 
+template iff(cond, iftrue, iffalse): untyped = 
+  if cond: iftrue
+  else   : iffalse
+
 # ---------------------------------------
+
+func splitOnce(s; c: char): (string, string) = 
+  let parts = s.split(c, 1)
+  (parts[0], iff(parts.len == 2, parts[1], ""))
 
 func isElement(x): bool = 
   x.kind == xnElement
@@ -56,11 +67,8 @@ func tagLabel(s): string =
   else            : s.substr 1
 
 func parseHashTag(s): HashTag = 
-  let  parts    = s.split(':', 1)
-  case parts.len
-  of 1: initHashTag tagLabel parts[0], ""
-  of 2: initHashTag tagLabel parts[0], strip parts[1]
-  else: impossible
+  let (name, val) = splitOnce(s, ':')
+  initHashTag tagLabel name, strip val
 
 func parseHashTags(s): seq[HashTag] = 
   for l in splitLines s:
@@ -148,7 +156,6 @@ func toHtml(n; templates: Table[string, XmlNode]): XmlNode =
   # extract params
 
 
-
 when isMainModule:
   let tmpls = loadHtmlTemplates Path "./templates.html"
 
@@ -157,7 +164,7 @@ when isMainModule:
       doc  = parseHtmlFromFile p
       html = toHtml(initNode doc, tmpls)
 
-    writeFile "test.html", $html
+    writeFile "play.html", $html
 
 
 # block config:
