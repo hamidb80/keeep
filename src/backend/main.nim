@@ -31,11 +31,12 @@ using
   n: Note
 
 
+const 
+  noteViewTemplate = "note-view"
+
+
 func initHashTag(name, val: string): HashTag = 
   HashTag(name: name, value: val)
-
-
-
 
 # ---------------------------------------
 
@@ -137,7 +138,6 @@ func initNode(html: sink XmlNode): Note =
   else:
     raisev "the note should have at least these tags at the root: artice, tags"
 
-const noteViewTemplate = "note-view"
 
 proc loadHtmlTemplates(p): Table[string, XmlNode] = 
   let defDoc = parseHtmlFromFile p
