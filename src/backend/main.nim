@@ -2,7 +2,7 @@ import std/[
   xmltree, 
   strutils, 
   times,
-  tables,
+  tables, strtabs,
   os, paths, streams,
   algorithm]
 
@@ -34,7 +34,7 @@ using
 
 
 const 
-  noteViewTemplate = "note-view"
+  noteViewT = "note-view" # note view template name
 
 
 func initHashTag(name, val: string): HashTag = 
@@ -116,9 +116,11 @@ func findTitle(x): string =
   else: titles[0].innerText
 
 
-func initNode(html: sink XmlNode): Note =
+func initNote(html: sink XmlNode, path: Path): Note =
   template articleResolver(doc): untyped =
     result.content = doc
+
+  result.path = path
     
   if html.isElement:
     case html.tag
@@ -166,26 +168,108 @@ proc loadHtmlTemplates(p): Table[string, XmlNode] =
         raisev "only <template> is allowed in top level"
 
 
-func copyTemplate(root: XmlNode, modifier: proc(x: XmlNode): XmlNode): XmlNode {.effectsOf: modifier.} = 
-  ## traversed through it and replaces what modifier
-  discard
+type
+  Xxx = tuple
+    node: XmlNode
+    onlyChildren: bool
 
+
+func map(father: var XmlNode, src: XmlNode, onlyChildren: bool, mapper: proc(x: XmlNode): Xxx) {.effectsOf: mapper.} = 
+  if onlyChildren:
+    for n in src:
+      map father, n, false, mapper
+  
+  else:
+    var (el, oc) = mapper src
+    
+    if oc:
+      map father, el, true, mapper
+    else:
+      father.add el
+
+      if el.isElement:
+        for n in src:
+          map el, n, false, mapper
+
+  
 func renderHtml(n; templates: Table[string, XmlNode]): XmlNode = 
-  let tmpl = templates[noteViewTemplate]
-  # for x in 
-  # traverse tmpl to build
-  # extract params
+  proc repl(x: XmlNode): Xxx =
+    if x.isElement:
+      debugEcho x.tag
+      case x.tag
+      of "use":
+        let  tname = x.attr"template"
+        case tname
+        of   "article": (n.content,        false)
+        else          : (templates[tname], true)
 
+      else: 
+        var el = newElement x.tag
+        el.attrs = x.attrs
+        (el, false)
+    else: 
+      (x, false)
+  
+  result = newElement "html"
+  map(result, templates[noteViewT], true, repl)
+
+type Html = distinct XmlNode
+
+func toStringImpl(result: var string; x) = 
+  case x.kind
+  of   xnElement:
+    let t = x.tag
+
+    result.add '<'
+    result.add t
+
+    if x.attrsLen != 0:
+      for k, v in x.attrs:
+        result.add ' '
+        result.add k
+
+        if v != "":
+          result.add '='
+          result.add '"'
+          result.add v
+          result.add '"'
+
+    result.add '>'
+
+    for n in x:
+      toStringImpl result, n
+
+    case t
+    of   "link": discard
+    else:
+      result.add '<'
+      result.add '/'
+      result.add t
+      result.add '>'
+
+  of xnText:
+    result.add x.text
+
+  of xnComment: discard
+  else: raisev "unsuppored xml kind: " & $x.kind
+
+func `$`(h: Html): string = 
+  toStringImpl result, h.XmlNode 
+
+proc writeHtml(p, x) = 
+  let f = newFileStream($p, fmWrite)
+  f.write "<!DOCTYPE html>"
+  f.write $x.Html
+  f.close
 
 when isMainModule:
   let tmpls = loadHtmlTemplates Path "./templates.html"
-  echo tmpls
   for p in discover Path "./notes":
     let 
       doc  = parseHtmlFromFile p
-      html = renderHtml(initNode doc, tmpls)
+      html = renderHtml(initNote(doc, p), tmpls)
 
-    writeFile "play.html", $html
+    writeHtml Path "./play.html", html
 
 
 # block config:
