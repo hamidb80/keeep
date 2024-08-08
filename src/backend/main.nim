@@ -18,6 +18,7 @@ type
 
 
   Note* = object
+    id*       : string
     path*     : Path         ## original file path
     timestamp*: Datetime
     # title*: string
@@ -116,29 +117,43 @@ func findTitle(x): string =
 
 
 func initNode(html: sink XmlNode): Note =
-  case html.tag
-  of "document": # automatically generated tag for wrapping
-    for el in html:
-      if el.kind == xnElement:
-        case el.tag
-        of "article": 
-          result.content = el
-        
-        of "tags":
-          result.hashtags = el.innerText.parseHashTags
-        
-        of "time": 
-          discard
-        
-        of "data": 
-          discard
-        
-        else: 
-          raisev "invalid tag in direct child of html file: " & el.tag
-  
-  else:
-    raisev "the note should have at least these tags at the root: artice, tags"
+  template articleResolver(doc): untyped =
+    result.content = doc
+    
+  if html.isElement:
+    case html.tag
+    of "document": # automatically generated tag for wrapping multiple tags
+      for el in html:
+        if el.kind == xnElement:
+          case el.tag
+          of "article": 
+            articleResolver el
 
+          of "tags":
+            result.hashtags = el.innerText.parseHashTags
+
+          of "id": 
+            # TODO if not present, create one
+            discard
+          
+          of "time": 
+            # TODO if not present, create one
+            discard
+          
+          of "data": 
+            discard
+          
+          else: 
+            raisev "invalid tag in direct child of html file: " & el.tag
+    
+    of "article": # he document only has single article element
+      articleResolver html
+
+    else:
+      raisev "the note should have at least these tags at the root: artice, tags"
+
+  else:
+    raisev "provided node as HTML is not element kind"
 
 proc loadHtmlTemplates(p): Table[string, XmlNode] = 
   let defDoc = parseHtmlFromFile p
@@ -151,8 +166,13 @@ proc loadHtmlTemplates(p): Table[string, XmlNode] =
         raisev "only <template> is allowed in top level"
 
 
+func copyTemplate(root: XmlNode, modifier: proc(x: XmlNode): XmlNode): XmlNode {.effectsOf: modifier.} = 
+  ## traversed through it and replaces what modifier
+  discard
+
 func renderHtml(n; templates: Table[string, XmlNode]): XmlNode = 
   let tmpl = templates[noteViewTemplate]
+  # for x in 
   # traverse tmpl to build
   # extract params
 
