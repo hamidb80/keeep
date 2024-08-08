@@ -1,0 +1,2 @@
+
+up.compiler('.tags', element => {})

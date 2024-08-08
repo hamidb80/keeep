@@ -191,6 +191,9 @@ func map(father: var XmlNode, src: XmlNode, onlyChildren: bool, mapper: proc(x: 
         for n in src:
           map el, n, false, mapper
 
+func wrap(hts: seq[HashTag]): XmlNode = 
+  # to HTML
+  discard
   
 func renderHtml(n; templates: Table[string, XmlNode]): XmlNode = 
   proc repl(x: XmlNode): Xxx =
@@ -201,6 +204,7 @@ func renderHtml(n; templates: Table[string, XmlNode]): XmlNode =
         let  tname = x.attr"template"
         case tname
         of   "article": (n.content,        false)
+        of   "tags"   : (n.hashtags.wrap,  true)
         else          : (templates[tname], true)
 
       else: 
@@ -263,13 +267,13 @@ proc writeHtml(p, x) =
   f.close
 
 when isMainModule:
-  let tmpls = loadHtmlTemplates Path "./templates.html"
+  let tmpls = loadHtmlTemplates Path "./partials/templates.html"
   for p in discover Path "./notes":
     let 
       doc  = parseHtmlFromFile p
       html = renderHtml(initNote(doc, p), tmpls)
 
-    writeHtml Path "./play.html", html
+    writeHtml Path "./dist/play.html", html
 
 
 # block config:

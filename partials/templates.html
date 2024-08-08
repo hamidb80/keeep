@@ -8,23 +8,31 @@
 
   <link rel="stylesheet" href="https://bootswatch.com/5/zephyr/bootstrap.min.css">
 
-  <link rel="stylesheet" href="./style.css">
-  <script src="./page.js" defer></script>
+  <link rel="stylesheet" href="./libs/style.css">
+  <script src="./libs/page.js" defer></script>
 </template>
 
 <template name="note-view">
+
   <head>
     <use template="common-head"></use>
     <title>note page</title>
   </head>
 
-  <body>
-    <use template="article"></use>
-    <div>
-      <span>
-        wow
-      </span>
+  <body class="bg-light">
+    <div class="container">
+      <div class="mt-4 card mx-auto shadow-sm rounded">
+        <div class="card-body">
+          <use template="article"></use>
+        </div>
+        <div class="card-footer">
+          <div class="tags">
+            <use template="tags"></use>
+          </div>
+        </div>
+      </div>
     </div>
+
   </body>
 </template>
 
