@@ -1,18 +1,6 @@
-<template name="common-head">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+<!-- pages -->
 
-  <script src="https://cdn.jsdelivr.net/npm/unpoly@3.8.0/unpoly.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/unpoly@3.8.0/unpoly.min.css">
-
-  <link rel="stylesheet" href="https://bootswatch.com/5/zephyr/bootstrap.min.css">
-
-  <link rel="stylesheet" href="../libs/style.css">
-  <script src="../libs/page.js" defer></script>
-</template>
-
-<template name="note-view">
+<template name="note-page">
 
   <head>
     <use template="common-head"></use>
@@ -29,12 +17,99 @@
           <div class="tags">
             <use template="tags"></use>
           </div>
+          <div class="buttons">
+            <!-- <use template="action_btns"></use> -->
+          </div>
         </div>
       </div>
     </div>
 
   </body>
 </template>
+
+<template name="index-page">
+
+  <head>
+    <use template="common-head"></use>
+    <title>
+      <slot name="index-page-title"></slot>
+    </title>
+  </head>
+
+  <body class="bg-light">
+    <div class="container">
+      <h2>Notes</h2>
+
+      <form>
+        <label for="">score function</label>
+        <select name="" id="">
+          <option value=""></option>
+        </select>
+      </form>
+
+      <div>
+        <table>
+          <thead>
+            <th>
+              title
+            </th>
+            <th>
+              tags
+            </th>
+            <th>
+              date
+            </th>
+          </thead>
+          <tbody>
+
+          </tbody>
+          <tfoot>
+
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+  </body>
+</template>
+
+<template name="about-page">
+
+  <head>
+    <use template="common-head"></use>
+    <title>About</title>
+  </head>
+
+  <body class="bg-light">
+    <div class="container">
+      <h2>
+        About
+      </h2>
+      <div>
+        not yet
+      </div>
+    </div>
+
+  </body>
+</template>
+
+<!-- partials -->
+
+<template name="common-head">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/unpoly@3.8.0/unpoly.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/unpoly@3.8.0/unpoly.min.css">
+
+  <link rel="stylesheet" href="https://bootswatch.com/5/zephyr/bootstrap.min.css">
+
+  <link rel="stylesheet" href="../libs/style.css">
+  <script src="../libs/page.js" defer></script>
+</template>
+
+<!-- components -->
 
 <template name="hashtag">
   <div class="hashtag btn btn-sm btn-outline-primary">

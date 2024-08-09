@@ -12,10 +12,6 @@ import pkg/htmlparser
 # ---------------------------------------
 
 type
-  Xxx = tuple
-    node: XmlNode
-    onlyChildren: bool
-
   Html = distinct XmlNode
 
   HashTag* = object
@@ -24,7 +20,7 @@ type
     name*, value*: string
 
 
-  Note* = object
+  Note* = ref object
     id*       : string
     path*     : Path         ## original file path
     timestamp*: Datetime
@@ -40,8 +36,8 @@ using
 
 
 const 
-  noteViewT = "note-view" # note view template name
-
+  noteViewT   = "note-view" # note view template name
+  htmlPrefix  = "<!DOCTYPE html>"
 
 func initHashTag(name, val: string): HashTag = 
   HashTag(name: name, value: val)
@@ -126,7 +122,7 @@ func initNote(html: sink XmlNode, path: Path): Note =
   template articleResolver(doc): untyped =
     result.content = doc
 
-  result.path = path
+  result = Note(path: path)
     
   if html.isElement:
     case html.tag
@@ -139,6 +135,9 @@ func initNote(html: sink XmlNode, path: Path): Note =
 
           of "tags":
             result.hashtags = el.innerText.parseHashTags
+
+          of "action_btns":
+            discard
 
           of "id": 
             result.id = el.innerText
@@ -169,39 +168,51 @@ proc loadHtmlTemplates(p): Table[string, XmlNode] =
         raisev "only <template> is allowed in top level"
 
 
-func map(father: var XmlNode, src: XmlNode, onlyChildren: bool, mapper: proc(x: XmlNode): Xxx) {.effectsOf: mapper.} = 
-  if onlyChildren:
+func isWrapper(x): bool =
+  x.isElement and x.tag in ["", "template"]
+
+func newWrapper: XmlNode =
+  newElement ""
+
+# func addCustom(father: var XmlNode, x: XmlNode) = 
+#   if x.isWrapper:
+#     for n in x:
+#       father.add n
+#   else:
+#     father.add x
+
+func map(father: var XmlNode, src: XmlNode, mapper: proc(x: XmlNode): XmlNode) {.effectsOf: mapper.} = 
+  if src.isWrapper:
     for n in src:
-      map father, n, false, mapper
+      map father, n, mapper
   
   else:
-    var (el, oc) = mapper src
+    var el = mapper src
 
-    if oc:
-      map father, el, true, mapper
+    if el.isWrapper:
+      map father, el, mapper
+
     else:
       father.add el
 
-      if el.isElement and src.isElement:
-        debugEcho "hell ", father, el
-
+      if el.isElement: # and src.isElement:
         for n in src:
-          map el, n, false, mapper
+          map el, n, mapper
 
 func renderTemplate(t: XmlNode, ctx: proc(key: string): XmlNode): XmlNode = 
-  result = newElement "wtf"
+  result = newWrapper()
 
-  proc repl(x): Xxx = 
+  proc repl(x): XmlNode = 
     if x.isElement:
       case x.tag
-      of   "slot": (ctx x.attr"name", false)
-      else:        (newXmlTree(x.tag, [], x.attrs), false)
-    else:          (x, false)
+      of   "slot": ctx x.attr"name"
+      else:        newXmlTree(x.tag, [], x.attrs)
+    else:          x
 
-  map result, t, true, repl
+  map result, t, repl
 
 func wrap(hashtags: seq[HashTag], templates: Table[string, XmlNode]): XmlNode = 
-  result = newElement "wrap"
+  result = newWrapper()
   
   for ht in hashtags:
     let ctx = capture ht:
@@ -215,20 +226,21 @@ func wrap(hashtags: seq[HashTag], templates: Table[string, XmlNode]): XmlNode =
       << n
   
 func renderHtml(n; templates: Table[string, XmlNode]): XmlNode = 
-  proc repl(x: XmlNode): Xxx =
+  proc repl(x: XmlNode): XmlNode =
     if x.isElement:
       case x.tag
       of "use":
         let  tname = x.attr"template"
         case tname
-        of   "article": (n.content,                      false)
-        of   "tags"   : (n.hashtags.wrap(templates),     true )
-        else          : (templates[tname],               true )
-      else            : (newXmlTree(x.tag, [], x.attrs), false)
-    else              : (x,                              false)
+        of   "article"    : n.content
+        of   "tags"       : n.hashtags.wrap(templates)
+        of   "action_btns": raisev "no defined yet"
+        else              : templates[tname]
+      else                : newXmlTree(x.tag, [], x.attrs)
+    else                  : x
   
   result = newElement "html"
-  map(result, templates[noteViewT], true, repl)
+  map result, templates[noteViewT], repl
 
 
 func toStringImpl(result: var string; x) = 
@@ -255,7 +267,7 @@ func toStringImpl(result: var string; x) =
       toStringImpl result, n
 
     case t
-    of   "link": discard
+    of   "link", "img", "input": discard
     else:
       << '<'
       << '/'
@@ -273,16 +285,28 @@ func `$`(h: Html): string =
 
 proc writeHtml(p, x) = 
   let f = newFileStream($p, fmWrite)
-  f.write "<!DOCTYPE html>"
-  f.write $x.Html
+  f.write htmlPrefix
+  f.write $Html x
   f.close
 
 func `/`(a: Path, b: string): Path = 
   Path $a / b
 
-proc genWebsite(templateDir, notesDir, saveNotedDir: Path) = 
-  let tmpls = loadHtmlTemplates templateDir
 
+func `index.html`(): XmlNode = 
+  discard
+
+func `about.html`(): XmlNode = 
+  discard
+
+func `settings.html`(): XmlNode = 
+  discard
+
+
+proc genWebsite(templateDir, notesDir, saveNoteDir: Path) = 
+  let tmpls = loadHtmlTemplates templateDir
+  var notes: seq[Note]
+  
   for p in discover notesDir:
     echo "+ processing ", p
     let 
@@ -291,27 +315,24 @@ proc genWebsite(templateDir, notesDir, saveNotedDir: Path) =
       html  = renderHtml(note, tmpls)
       fname = extractFilename $p
 
-    writeHtml saveNotedDir/fname, html
+    add notes, note
+    writeHtml saveNoteDir/fname, html
 
-  #   note view:
-  #     content
-  #     buttuns forr remembering
+  echo "creating other pages ..."
 
-  # build about.html
+  writeHtml saveNoteDir/"index.html",    html
+  # writeHtml saveNoteDir/"about.html",    html
+  # writeHtml saveNoteDir/"settings.html", html
 
-  # build index.html
-  #   notes table:
-  #     different formuals forr scoring
-  #     searchable
-  #     show name, tag, time, score
+  # notes table:
+  #   different formuals forr scoring
+  #   searchable
+  #   show name, tag, time, score
 
-  
-  # build settings.html
-  # block config:
-  #   confisgurable templates
-  #   config file "for base_url, site_name"
-  #     export local DB
-  #     import DB
+  # confisgurable templates
+  # config file "for base_url, site_name"
+  #   export local DB
+  #   import DB
 
 
 when isMainModule:
