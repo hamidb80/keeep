@@ -11,6 +11,12 @@ import pkg/htmlparser
 # ---------------------------------------
 
 type
+  Xxx = tuple
+    node: XmlNode
+    onlyChildren: bool
+
+  Html = distinct XmlNode
+
   HashTag* = object
     ## simple tag: #math
     ## data   tag: #page: 2
@@ -168,12 +174,6 @@ proc loadHtmlTemplates(p): Table[string, XmlNode] =
         raisev "only <template> is allowed in top level"
 
 
-type
-  Xxx = tuple
-    node: XmlNode
-    onlyChildren: bool
-
-
 func map(father: var XmlNode, src: XmlNode, onlyChildren: bool, mapper: proc(x: XmlNode): Xxx) {.effectsOf: mapper.} = 
   if onlyChildren:
     for n in src:
@@ -211,7 +211,6 @@ func renderHtml(n; templates: Table[string, XmlNode]): XmlNode =
   result = newElement "html"
   map(result, templates[noteViewT], true, repl)
 
-type Html = distinct XmlNode
 
 func toStringImpl(result: var string; x) = 
   case x.kind
@@ -267,7 +266,7 @@ proc genWebsite(templateDir, notesDir, saveNotedDir: Path) =
   let tmpls = loadHtmlTemplates templateDir
 
   for p in discover notesDir:
-    echo p
+    echo "+ processing ", p
     let 
       doc   = parseHtmlFromFile p
       html  = renderHtml(initNote(doc, p), tmpls)
@@ -275,28 +274,25 @@ proc genWebsite(templateDir, notesDir, saveNotedDir: Path) =
 
     writeHtml saveNotedDir/fname, html
 
+  #   note view:
+  #     content
+  #     buttuns forr remembering
+
+  # build about.html
+
   # build index.html
-  # build settings.html
-
-  # block config:
-  #   configurable templates
-  #   config file "for base_url, site_name"
-
-  # block pages:
-  #   about
-  #   settings:
-  #     name
-  #     export local DB
-  #     import DB
-
   #   notes table:
   #     different formuals forr scoring
   #     searchable
   #     show name, tag, time, score
 
-  #   note view:
-  #     content
-  #     buttuns forr remembering
+  
+  # build settings.html
+  # block config:
+  #   confisgurable templates
+  #   config file "for base_url, site_name"
+  #     export local DB
+  #     import DB
 
 
 when isMainModule:
