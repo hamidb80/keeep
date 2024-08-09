@@ -263,7 +263,7 @@ proc writeHtml(p, x) =
 func `/`(a: Path, b: string): Path = 
   Path $a / b
 
-proc main(templateDir, notesDir, saveNotedDir: Path) = 
+proc genWebsite(templateDir, notesDir, saveNotedDir: Path) = 
   let tmpls = loadHtmlTemplates templateDir
 
   for p in discover notesDir:
@@ -276,30 +276,30 @@ proc main(templateDir, notesDir, saveNotedDir: Path) =
     writeHtml saveNotedDir/fname, html
 
   # build index.html
+  # build settings.html
 
+  # block config:
+  #   configurable templates
+  #   config file "for base_url, site_name"
+
+  # block pages:
+  #   about
+  #   settings:
+  #     name
+  #     export local DB
+  #     import DB
+
+  #   notes table:
+  #     different formuals forr scoring
+  #     searchable
+  #     show name, tag, time, score
+
+  #   note view:
+  #     content
+  #     buttuns forr remembering
 
 
 when isMainModule:
-  main Path "./partials/templates.html", 
-       Path "./notes", 
-       Path "./dist/notes"
-
-# block config:
-#   configurable templates
-#   config file "for base_url, site_name"
-
-# block pages:
-#   about
-#   settings:
-#     name
-#     export local DB
-#     import DB
-
-#   notes table:
-#     different formuals forr scoring
-#     searchable
-#     show name, tag, time, score
-
-#   note view:
-#     content
-#     buttuns forr remembering
+  genWebsite Path "./partials/templates.html", 
+             Path "./notes", 
+             Path "./dist/notes"
