@@ -4,7 +4,8 @@ import std/[
   times,
   tables, strtabs,
   os, paths, streams,
-  algorithm]
+  algorithm,
+  sugar]
 
 import pkg/htmlparser
 
@@ -27,9 +28,8 @@ type
     id*       : string
     path*     : Path         ## original file path
     timestamp*: Datetime
-    # title*: string
-    content*: XmlNode
-    hashtags*: seq[HashTag]
+    content*  : XmlNode
+    hashtags* : seq[HashTag]
 
 
 using 
@@ -141,15 +141,10 @@ func initNote(html: sink XmlNode, path: Path): Note =
             result.hashtags = el.innerText.parseHashTags
 
           of "id": 
-            # TODO if not present, create one
-            discard
+            result.id = el.innerText
           
-          of "time": 
-            # TODO if not present, create one
-            discard
-          
-          of "data": 
-            discard
+          # of "time": 
+          #   result.timestamp = fromUnix parseInt strip el.innerText
           
           else: 
             raisev "invalid tag in direct child of html file: " & el.tag
@@ -187,13 +182,37 @@ func map(father: var XmlNode, src: XmlNode, onlyChildren: bool, mapper: proc(x: 
     else:
       father.add el
 
-      if el.isElement:
+      if el.isElement and src.isElement:
+        debugEcho "hell ", father, el
+
         for n in src:
           map el, n, false, mapper
 
-func wrap(hts: seq[HashTag]): XmlNode = 
-  # to HTML
-  newElement("wtf")
+func renderTemplate(t: XmlNode, ctx: proc(key: string): XmlNode): XmlNode = 
+  result = newElement "wtf"
+
+  proc repl(x): Xxx = 
+    if x.isElement:
+      case x.tag
+      of   "slot": (ctx x.attr"name", false)
+      else:        (newXmlTree(x.tag, [], x.attrs), false)
+    else:          (x, false)
+
+  map result, t, true, repl
+
+func wrap(hashtags: seq[HashTag], templates: Table[string, XmlNode]): XmlNode = 
+  result = newElement "wrap"
+  
+  for ht in hashtags:
+    let ctx = capture ht:
+      proc (k: string): XmlNode = 
+        case k
+        of "name": newText ht.name
+        # of "icon": newText ht.name
+        else:      raisev "invalid property for hashtag render: " & k
+    
+    for n in renderTemplate(templates["hashtag"], ctx):
+      << n
   
 func renderHtml(n; templates: Table[string, XmlNode]): XmlNode = 
   proc repl(x: XmlNode): Xxx =
@@ -203,7 +222,7 @@ func renderHtml(n; templates: Table[string, XmlNode]): XmlNode =
         let  tname = x.attr"template"
         case tname
         of   "article": (n.content,                      false)
-        of   "tags"   : (n.hashtags.wrap,                true )
+        of   "tags"   : (n.hashtags.wrap(templates),     true )
         else          : (templates[tname],               true )
       else            : (newXmlTree(x.tag, [], x.attrs), false)
     else              : (x,                              false)
