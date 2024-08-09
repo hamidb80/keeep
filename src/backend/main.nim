@@ -33,7 +33,7 @@ using
   p: Path
   s: string
   n: Note
-
+  templates: Table[string, XmlNode]
 
 const 
   htmlPrefix  = "<!DOCTYPE html>"
@@ -249,7 +249,7 @@ func renderTemplate(t: XmlNode, ctx: proc(key: string): XmlNode): XmlNode =
 
   map result, t, repl
 
-func wrap(hashtags: seq[HashTag], templates: Table[string, XmlNode]): XmlNode = 
+func wrap(hashtags: seq[HashTag], templates): XmlNode = 
   result = newWrapper()
   
   for ht in hashtags:
@@ -263,7 +263,7 @@ func wrap(hashtags: seq[HashTag], templates: Table[string, XmlNode]): XmlNode =
     for n in renderTemplate(templates["hashtag"], ctx):
       << n
   
-func renderHtml(n; templates: Table[string, XmlNode]): XmlNode = 
+func renderHtml(n; templates): XmlNode = 
   proc repl(x: XmlNode): XmlNode =
     if x.isElement:
       case x.tag
@@ -287,19 +287,18 @@ proc writeHtml(p, x) =
   f.write $Html x
   f.close
 
-func `index.html`(): XmlNode = 
+func `index.html`(`template`: XmlNode): XmlNode = 
   # notes table:
   #   different formuals forr scoring
   #   searchable
   #   show name, tag, time, score
-
   discard
 
-func `about.html`(): XmlNode = 
+func `about.html`(`template`: XmlNode): XmlNode = 
   # just description
   discard
 
-func `settings.html`(): XmlNode = 
+func `settings.html`(`template`: XmlNode): XmlNode = 
   # config file "for base_url, site_name"
   #   export local DB
   #   import DB
@@ -307,7 +306,7 @@ func `settings.html`(): XmlNode =
   discard
 
 proc genWebsite(templateDir, notesDir, saveNoteDir: Path) = 
-  let tmpls = loadHtmlTemplates templateDir
+  let templates = loadHtmlTemplates templateDir
   var notes: seq[Note]
   
   for p in discover notesDir:
@@ -315,7 +314,7 @@ proc genWebsite(templateDir, notesDir, saveNoteDir: Path) =
     let 
       doc   = parseHtmlFromFile p
       note  = initNote(doc, p)
-      html  = renderHtml(note, tmpls)
+      html  = renderHtml(note, templates)
       fname = extractFilename $p
 
     add notes, note
@@ -323,9 +322,9 @@ proc genWebsite(templateDir, notesDir, saveNoteDir: Path) =
 
   echo "creating other pages ..."
 
-  writeHtml saveNoteDir/"index.html",    `index.html`()
-  writeHtml saveNoteDir/"about.html",    `about.html`()
-  writeHtml saveNoteDir/"settings.html", `settings.html`()
+  writeHtml saveNoteDir/"index.html",    `index.html`    templates["index-page"]
+  writeHtml saveNoteDir/"about.html",    `about.html`    templates["about-page"]
+  writeHtml saveNoteDir/"settings.html", `settings.html` templates["settings-page"]
 
 
 when isMainModule:
