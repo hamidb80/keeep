@@ -26,6 +26,7 @@ Rethinking note taking!
 - github pages sharable
 - compress images of size more than treshhild with `.webp` format
 - tag style customize
+- CLI tool like `add-note`, `build`, ...
 
 ## Tech stack
 

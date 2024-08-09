@@ -181,7 +181,7 @@ func map(father: var XmlNode, src: XmlNode, onlyChildren: bool, mapper: proc(x: 
   
   else:
     var (el, oc) = mapper src
-    
+
     if oc:
       map father, el, true, mapper
     else:
@@ -193,26 +193,20 @@ func map(father: var XmlNode, src: XmlNode, onlyChildren: bool, mapper: proc(x: 
 
 func wrap(hts: seq[HashTag]): XmlNode = 
   # to HTML
-  discard
+  newElement("wtf")
   
 func renderHtml(n; templates: Table[string, XmlNode]): XmlNode = 
   proc repl(x: XmlNode): Xxx =
     if x.isElement:
-      debugEcho x.tag
       case x.tag
       of "use":
         let  tname = x.attr"template"
         case tname
-        of   "article": (n.content,        false)
-        of   "tags"   : (n.hashtags.wrap,  true)
-        else          : (templates[tname], true)
-
-      else: 
-        var el = newElement x.tag
-        el.attrs = x.attrs
-        (el, false)
-    else: 
-      (x, false)
+        of   "article": (n.content,                      false)
+        of   "tags"   : (n.hashtags.wrap,                true )
+        else          : (templates[tname],               true )
+      else            : (newXmlTree(x.tag, [], x.attrs), false)
+    else              : (x,                              false)
   
   result = newElement "html"
   map(result, templates[noteViewT], true, repl)
@@ -266,15 +260,29 @@ proc writeHtml(p, x) =
   f.write $x.Html
   f.close
 
-when isMainModule:
-  let tmpls = loadHtmlTemplates Path "./partials/templates.html"
-  for p in discover Path "./notes":
+func `/`(a: Path, b: string): Path = 
+  Path $a / b
+
+proc main(templateDir, notesDir, saveNotedDir: Path) = 
+  let tmpls = loadHtmlTemplates templateDir
+
+  for p in discover notesDir:
+    echo p
     let 
-      doc  = parseHtmlFromFile p
-      html = renderHtml(initNote(doc, p), tmpls)
+      doc   = parseHtmlFromFile p
+      html  = renderHtml(initNote(doc, p), tmpls)
+      fname = extractFilename $p
 
-    writeHtml Path "./dist/play.html", html
+    writeHtml saveNotedDir/fname, html
 
+  # build index.html
+
+
+
+when isMainModule:
+  main Path "./partials/templates.html", 
+       Path "./notes", 
+       Path "./dist/notes"
 
 # block config:
 #   configurable templates
