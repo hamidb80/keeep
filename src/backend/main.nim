@@ -49,7 +49,7 @@ func initHashTag(name, val: string): HashTag =
 # ---------------------------------------
 
 template `<<`(smth): untyped {.dirty.} =
-  result.add smth
+  result.add  smth
 
 template raisev(msg): untyped {.dirty.} =
   raise newException(ValueError, msg)
@@ -216,22 +216,21 @@ func toStringImpl(result: var string; x) =
   case x.kind
   of   xnElement:
     let t = x.tag
-
-    result.add '<'
-    result.add t
+    << '<'
+    << t
 
     if x.attrsLen != 0:
       for k, v in x.attrs:
-        result.add ' '
-        result.add k
+        << ' '
+        << k
 
         if v != "":
-          result.add '='
-          result.add '"'
-          result.add v
-          result.add '"'
+          << '='
+          << '"'
+          << v
+          << '"'
 
-    result.add '>'
+    << '>'
 
     for n in x:
       toStringImpl result, n
@@ -239,13 +238,13 @@ func toStringImpl(result: var string; x) =
     case t
     of   "link": discard
     else:
-      result.add '<'
-      result.add '/'
-      result.add t
-      result.add '>'
+      << '<'
+      << '/'
+      << t
+      << '>'
 
   of xnText:
-    result.add x.text
+    << x.text
 
   of xnComment: discard
   else: raisev "unsuppored xml kind: " & $x.kind
@@ -269,7 +268,8 @@ proc genWebsite(templateDir, notesDir, saveNotedDir: Path) =
     echo "+ processing ", p
     let 
       doc   = parseHtmlFromFile p
-      html  = renderHtml(initNote(doc, p), tmpls)
+      note  = initNote(doc, p)
+      html  = renderHtml(note, tmpls)
       fname = extractFilename $p
 
     writeHtml saveNotedDir/fname, html
