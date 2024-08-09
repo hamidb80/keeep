@@ -36,7 +36,6 @@ using
 
 
 const 
-  noteViewT   = "note-view" # note view template name
   htmlPrefix  = "<!DOCTYPE html>"
 
 func initHashTag(name, val: string): HashTag = 
@@ -66,14 +65,70 @@ func splitOnce(s; c: char): (string, string) =
 func isElement(x): bool = 
   x.kind == xnElement
 
-func tagLabel(s): string = 
+func isWrapper(x): bool =
+  x.isElement and x.tag in ["", "template"]
+
+func newWrapper: XmlNode =
+  newElement ""
+
+
+func `/`(a: Path, b: string): Path = 
+  Path $a / b
+
+
+proc parseHtmlFromFile(p): XmlNode = 
+  parseHtml newFileStream($p, fmRead)
+
+
+func toStringImpl(result: var string; x) = 
+  case x.kind
+  of xnElement:
+    let t = x.tag
+    << '<'
+    << t
+
+    if x.attrsLen != 0:
+      for k, v in x.attrs:
+        << ' '
+        << k
+
+        if v != "":
+          << '='
+          << '"'
+          << v
+          << '"'
+
+    << '>'
+
+    for n in x:
+      toStringImpl result, n
+
+    case t
+    of   "link", "img", "input": discard
+    else:
+      << '<'
+      << '/'
+      << t
+      << '>'
+
+  of xnText:
+    << x.text
+
+  of xnComment: discard
+  else: raisev "unsuppored xml kind: " & $x.kind
+
+func `$`(h: Html): string = 
+  toStringImpl result, h.XmlNode 
+
+
+func hashTagLabel(s): string = 
   if   s.len <  2 : raisev "tag cannot have length of < 2"
   elif s[0] != '#': raisev "tag should start with #"
   else            : s.substr 1
 
 func parseHashTag(s): HashTag = 
   let (name, val) = splitOnce(s, ':')
-  initHashTag tagLabel name, strip val
+  initHashTag hashTagLabel name, strip val
 
 func parseHashTags(s): seq[HashTag] = 
   for l in splitLines s:
@@ -86,8 +141,15 @@ proc discover(dir: Path): seq[Path] =
     if f.endsWith ".html":
       << Path f
 
-proc parseHtmlFromFile(p): XmlNode = 
-  parseHtml newFileStream($p, fmRead)
+proc loadHtmlTemplates(p): Table[string, XmlNode] = 
+  let defDoc = parseHtmlFromFile p
+  for x in defDoc:
+    if x.isElement:
+      case x.tag
+      of "template":
+        result[x.attr"name"] = x 
+      else: 
+        raisev "only <template> is allowed in top level"
 
 
 func dfs(x; visit: proc(n: XmlNode): bool) {.effectsOf: visit.} = 
@@ -157,30 +219,6 @@ func initNote(html: sink XmlNode, path: Path): Note =
   else:
     raisev "provided node as HTML is not element kind"
 
-proc loadHtmlTemplates(p): Table[string, XmlNode] = 
-  let defDoc = parseHtmlFromFile p
-  for x in defDoc:
-    if x.isElement:
-      case x.tag
-      of "template":
-        result[x.attr"name"] = x 
-      else: 
-        raisev "only <template> is allowed in top level"
-
-
-func isWrapper(x): bool =
-  x.isElement and x.tag in ["", "template"]
-
-func newWrapper: XmlNode =
-  newElement ""
-
-# func addCustom(father: var XmlNode, x: XmlNode) = 
-#   if x.isWrapper:
-#     for n in x:
-#       father.add n
-#   else:
-#     father.add x
-
 func map(father: var XmlNode, src: XmlNode, mapper: proc(x: XmlNode): XmlNode) {.effectsOf: mapper.} = 
   if src.isWrapper:
     for n in src:
@@ -240,48 +278,8 @@ func renderHtml(n; templates: Table[string, XmlNode]): XmlNode =
     else                  : x
   
   result = newElement "html"
-  map result, templates[noteViewT], repl
+  map result, templates["note-page"], repl
 
-
-func toStringImpl(result: var string; x) = 
-  case x.kind
-  of   xnElement:
-    let t = x.tag
-    << '<'
-    << t
-
-    if x.attrsLen != 0:
-      for k, v in x.attrs:
-        << ' '
-        << k
-
-        if v != "":
-          << '='
-          << '"'
-          << v
-          << '"'
-
-    << '>'
-
-    for n in x:
-      toStringImpl result, n
-
-    case t
-    of   "link", "img", "input": discard
-    else:
-      << '<'
-      << '/'
-      << t
-      << '>'
-
-  of xnText:
-    << x.text
-
-  of xnComment: discard
-  else: raisev "unsuppored xml kind: " & $x.kind
-
-func `$`(h: Html): string = 
-  toStringImpl result, h.XmlNode 
 
 proc writeHtml(p, x) = 
   let f = newFileStream($p, fmWrite)
@@ -289,19 +287,24 @@ proc writeHtml(p, x) =
   f.write $Html x
   f.close
 
-func `/`(a: Path, b: string): Path = 
-  Path $a / b
-
-
 func `index.html`(): XmlNode = 
+  # notes table:
+  #   different formuals forr scoring
+  #   searchable
+  #   show name, tag, time, score
+
   discard
 
 func `about.html`(): XmlNode = 
+  # just description
   discard
 
 func `settings.html`(): XmlNode = 
-  discard
+  # config file "for base_url, site_name"
+  #   export local DB
+  #   import DB
 
+  discard
 
 proc genWebsite(templateDir, notesDir, saveNoteDir: Path) = 
   let tmpls = loadHtmlTemplates templateDir
@@ -320,19 +323,9 @@ proc genWebsite(templateDir, notesDir, saveNoteDir: Path) =
 
   echo "creating other pages ..."
 
-  writeHtml saveNoteDir/"index.html",    html
-  # writeHtml saveNoteDir/"about.html",    html
-  # writeHtml saveNoteDir/"settings.html", html
-
-  # notes table:
-  #   different formuals forr scoring
-  #   searchable
-  #   show name, tag, time, score
-
-  # confisgurable templates
-  # config file "for base_url, site_name"
-  #   export local DB
-  #   import DB
+  writeHtml saveNoteDir/"index.html",    `index.html`()
+  writeHtml saveNoteDir/"about.html",    `about.html`()
+  writeHtml saveNoteDir/"settings.html", `settings.html`()
 
 
 when isMainModule:
