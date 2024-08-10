@@ -1,6 +1,6 @@
 import std/[
   xmltree, 
-  strutils, 
+  strutils, sequtils,
   times,
   tables, strtabs,
   os, paths, streams,
@@ -316,17 +316,17 @@ func notesItemRows(notes: seq[Note]; templates): XmlNode =
           else           : shallowCopy x
         else             : x
       
-    map result, templates["index-page.note-item"], repl
+    map result, templates["notes-page.note-item"], repl
     
 
 func fnScores: XmlNode =
   result = newWrapper()
 
-  for n in ["by_date_passed", "failed_times"]:
+  for n in ["date", "by_date_passed", "failed_times"]:
     result.add newXmlTree("option", [newText n], xa {"value": n})
 
-func `index.html`(templates; notes: seq[Note]): XmlNode = 
-  let t = templates["index-page"]
+func `notes.html`(templates; notes: seq[Note]): XmlNode = 
+  let t = templates["notes-page"]
 
   func identityXml(x): XmlNode = 
     if x.isElement: 
@@ -334,6 +334,7 @@ func `index.html`(templates; notes: seq[Note]): XmlNode =
       of    "use":              templates[x.attr"template"]
       of    "score-fn-options": fnScores()
       of    "notes-rows":       notesItemRows(notes, templates)
+      of    "notes-page-title": newText "Keeep" # XXX from config
       else:                     shallowCopy x
     else:                       x
 
@@ -344,8 +345,8 @@ func `index.html`(templates; notes: seq[Note]): XmlNode =
   #   searchable
   #   show name, tag, time, score
 
-func `about.html`(templates): XmlNode = 
-  let t = templates["about-page"]
+func `index.html`(templates): XmlNode = 
+  let t = templates["index-page"]
 
   func identityXml(x): XmlNode = 
     if x.isElement: 
@@ -357,8 +358,8 @@ func `about.html`(templates): XmlNode =
   result = newHtmlDoc()
   map result, t, identityXml
 
-func `settings.html`(templates): XmlNode = 
-  let t = templates["settings-page"]
+func `profile.html`(templates): XmlNode = 
+  let t = templates["profile-page"]
 
   func identityXml(x): XmlNode = 
     if x.isElement: 
@@ -389,11 +390,11 @@ proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) =
     writeHtml saveNoteDir/fname, html
 
   echo "+ index.html"
-  writeHtml saveDir/"index.html",    `index.html`(   templates, notes)
-  echo "+ about.html"
-  writeHtml saveDir/"about.html",    `about.html`(   templates)
-  echo "+ settings.html"
-  writeHtml saveDir/"settings.html", `settings.html`(templates)
+  writeHtml saveDir/"index.html",    `index.html`(   templates)
+  echo "+ notes.html"
+  writeHtml saveDir/"notes.html",    `notes.html`(   templates, notes)
+  echo "+ profile.html"
+  writeHtml saveDir/"profile.html", `profile.html`(templates)
 
 
 when isMainModule:
