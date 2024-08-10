@@ -386,6 +386,9 @@ proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) =
       html  = renderHtml(note, templates)
       fname = extractFilename $p
 
+    # TODO write time if not exists
+    # TODO write id   if not exists
+
     add notes, note
     writeHtml saveNoteDir/fname, html
 
@@ -395,6 +398,8 @@ proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) =
   writeHtml saveDir/"notes.html",    `notes.html`(   templates, notes)
   echo "+ profile.html"
   writeHtml saveDir/"profile.html", `profile.html`(templates)
+
+  # XXX copy frontend folder
 
 
 when isMainModule:
