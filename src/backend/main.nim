@@ -58,6 +58,9 @@ template iff(cond, iftrue, iffalse): untyped =
 
 # ---------------------------------------
 
+func identity[T](t: T): T = t
+
+
 func splitOnce(s; c: char): (string, string) = 
   let parts = s.split(c, 1)
   (parts[0], iff(parts.len == 2, parts[1], ""))
@@ -74,10 +77,6 @@ func newWrapper: XmlNode =
 
 func `/`(a: Path, b: string): Path = 
   Path $a / b
-
-
-proc parseHtmlFromFile(p): XmlNode = 
-  parseHtml newFileStream($p, fmRead)
 
 
 func toStringImpl(result: var string; x) = 
@@ -119,6 +118,18 @@ func toStringImpl(result: var string; x) =
 
 func `$`(h: Html): string = 
   toStringImpl result, h.XmlNode 
+
+proc parseHtmlFromFile(p): XmlNode = 
+  parseHtml newFileStream($p, fmRead)
+
+proc writeHtml(p, x) = 
+  let f = newFileStream($p, fmWrite)
+  f.write htmlPrefix
+  f.write $Html x
+  f.close
+
+func shallowCopy(x): XmlNode = 
+  newXmlTree x.tag, [], x.attrs
 
 
 func hashTagLabel(s): string = 
@@ -244,7 +255,7 @@ func renderTemplate(t: XmlNode, ctx: proc(key: string): XmlNode): XmlNode =
     if x.isElement:
       case x.tag
       of   "slot": ctx x.attr"name"
-      else:        newXmlTree(x.tag, [], x.attrs)
+      else:        shallowCopy x
     else:          x
 
   map result, t, repl
@@ -262,9 +273,13 @@ func wrap(hashtags: seq[HashTag], templates): XmlNode =
     
     for n in renderTemplate(templates["hashtag"], ctx):
       << n
+
   
+func newHtmlDoc: XmlNode = 
+  newElement "html"
+
 func renderHtml(n; templates): XmlNode = 
-  proc repl(x: XmlNode): XmlNode =
+  proc repl(x): XmlNode =
     if x.isElement:
       case x.tag
       of "use":
@@ -274,43 +289,96 @@ func renderHtml(n; templates): XmlNode =
         of   "tags"       : n.hashtags.wrap(templates)
         of   "action_btns": raisev "no defined yet"
         else              : templates[tname]
-      else                : newXmlTree(x.tag, [], x.attrs)
+      else                : shallowCopy x
     else                  : x
   
-  result = newElement "html"
+  result = newHtmlDoc()
   map result, templates["note-page"], repl
 
+template xa(attrs): XmlAttributes = 
+  toXmlAttributes attrs
 
-proc writeHtml(p, x) = 
-  let f = newFileStream($p, fmWrite)
-  f.write htmlPrefix
-  f.write $Html x
-  f.close
+func notesItemRows(notes: seq[Note]; templates): XmlNode = 
+  result = newWrapper()
 
-func `index.html`(`template`: XmlNode): XmlNode = 
+  for n in notes:
+    let repl = capture n:
+      proc (x): XmlNode =
+        if x.isElement:
+          case x.tag
+          of   "slot": 
+            case  x.attr"name"
+            of    "title": newText n.content.findTitle
+            of    "date" : newText "today"
+            of    "tags" : newText "wtf"
+            of    "score": newText "-"
+            else         : raisev "invalid field"
+          else           : shallowCopy x
+        else             : x
+      
+    map result, templates["index-page.note-item"], repl
+    
+
+func fnScores: XmlNode =
+  result = newWrapper()
+
+  for n in ["by_date_passed", "failed_times"]:
+    result.add newXmlTree("option", [newText n], xa {"value": n})
+
+func `index.html`(templates; notes: seq[Note]): XmlNode = 
+  let t = templates["index-page"]
+
+  func identityXml(x): XmlNode = 
+    if x.isElement: 
+      case  x.tag
+      of    "use":              templates[x.attr"template"]
+      of    "score-fn-options": fnScores()
+      of    "notes-rows":       notesItemRows(notes, templates)
+      else:                     shallowCopy x
+    else:                       x
+
+  result = newHtmlDoc()
+  map result, t, identityXml
   # notes table:
   #   different formuals forr scoring
   #   searchable
   #   show name, tag, time, score
-  discard
 
-func `about.html`(`template`: XmlNode): XmlNode = 
-  # just description
-  discard
+func `about.html`(templates): XmlNode = 
+  let t = templates["about-page"]
 
-func `settings.html`(`template`: XmlNode): XmlNode = 
+  func identityXml(x): XmlNode = 
+    if x.isElement: 
+      case  x.tag
+      of    "use": templates[x.attr"template"]
+      else:        shallowCopy x
+    else:                      x
+
+  result = newHtmlDoc()
+  map result, t, identityXml
+
+func `settings.html`(templates): XmlNode = 
+  let t = templates["settings-page"]
+
+  func identityXml(x): XmlNode = 
+    if x.isElement: 
+      case  x.tag
+      of    "use": templates[x.attr"template"]
+      else:        shallowCopy x
+    else:                      x
+
+  result = newHtmlDoc()
+  map result, t, identityXml
   # config file "for base_url, site_name"
   #   export local DB
   #   import DB
 
-  discard
-
-proc genWebsite(templateDir, notesDir, saveNoteDir: Path) = 
+proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) = 
   let templates = loadHtmlTemplates templateDir
   var notes: seq[Note]
   
   for p in discover notesDir:
-    echo "+ processing ", p
+    echo "+ ", p
     let 
       doc   = parseHtmlFromFile p
       note  = initNote(doc, p)
@@ -320,14 +388,16 @@ proc genWebsite(templateDir, notesDir, saveNoteDir: Path) =
     add notes, note
     writeHtml saveNoteDir/fname, html
 
-  echo "creating other pages ..."
-
-  writeHtml saveNoteDir/"index.html",    `index.html`    templates["index-page"]
-  writeHtml saveNoteDir/"about.html",    `about.html`    templates["about-page"]
-  writeHtml saveNoteDir/"settings.html", `settings.html` templates["settings-page"]
+  echo "+ index.html"
+  writeHtml saveDir/"index.html",    `index.html`(   templates, notes)
+  echo "+ about.html"
+  writeHtml saveDir/"about.html",    `about.html`(   templates)
+  echo "+ settings.html"
+  writeHtml saveDir/"settings.html", `settings.html`(templates)
 
 
 when isMainModule:
-  genWebsite Path "./partials/templates.html", 
+  genWebsite Path "./templates.html", 
              Path "./notes", 
+             Path "./dist",
              Path "./dist/notes"

@@ -29,6 +29,25 @@
   </body>
 </template>
 
+
+<template name="index-page.note-item">
+  <tr>
+    <td>
+      <slot name="title"></slot>
+    </td>
+    <td>
+      <slot name="tags"></slot>
+    </td>
+    <td>
+      <slot name="date"></slot>
+    </td>
+    <td>
+      <slot name="score"></slot>
+    </td>
+  </tr>
+</template>
+
+
 <template name="index-page">
 
   <head>
@@ -45,7 +64,7 @@
       <form>
         <label for="">score function</label>
         <select name="" id="">
-          <option value=""></option>
+          <score-fn-options />
         </select>
       </form>
 
@@ -61,12 +80,17 @@
             <th>
               date
             </th>
+            <th>
+              score
+            </th>
           </thead>
           <tbody>
-
+            <notes-rows />
           </tbody>
           <tfoot>
-
+            <legend>
+              all notes
+            </legend>
           </tfoot>
         </table>
       </div>
