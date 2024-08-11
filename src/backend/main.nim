@@ -274,17 +274,17 @@ func wrap(hashtags: seq[HashTag], templates): XmlNode =
 func newHtmlDoc: XmlNode = 
   newElement "html"
 
-func renderNote(note: XmlNode, id: string, timestamp: UnixTimestamp, path: Path, templates): XmlNode =
+func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
   proc repl(x): XmlNode =
     if x.isElement:
       case x.tag
       of "use":
         let  tname = x.attr"template"
         case tname
-        of   "article"    : note.articleElement
-        of   "tags"       : note.noteTags.wrap(templates)
+        of   "title"      : newText note.title
+        of   "article"    : doc.articleElement
+        of   "tags"       : note.hashtags.wrap(templates)
         of   "action_btns": raisev "no defined yet"
-        of   "title"      : newText note.findTitle
         else              : templates[tname]
       else                : shallowCopy x
     else                  : x
@@ -408,19 +408,22 @@ proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) =
         if docTimestamp == "": tamper toUnix toTime now()
         else                 : parseint docTimestamp
 
+      note = NoteItem(
+        id       : id, 
+        timestamp: timestamp, 
+        path     : p,
+        title    : findTitle doc, 
+        hashtags : noteTags  doc)
+
+
     if isTampered:
       doc.attrs = xa {"id": id, "timestamp": $timestamp}
       writefile $p, $Html doc
 
     let path = saveNoteDir/(id & ".html")
-    let html = renderNote(doc, id, timestamp, p, templates)
+    let html = renderNote(doc, note, templates)
 
-    add notes, NoteItem(
-      id       : id, 
-      timestamp: timestamp, 
-      path     : p,
-      title    : findTitle doc, 
-      hashtags : noteTags  doc)
+    add notes, note
     writeHtml path, html 
 
   echo "+ index.html"
