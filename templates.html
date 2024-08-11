@@ -5,7 +5,7 @@
   <head>
     <use template="common-head"></use>
     <title>
-      note page
+      ✏ <use template="title"></use>
     </title>
   </head>
 
@@ -41,7 +41,7 @@
   <head>
     <use template="common-head"></use>
     <title>
-      <notes-page-title />
+      📚 Notes
     </title>
   </head>
 
@@ -148,7 +148,9 @@
 
   <head>
     <use template="common-head"></use>
-    <title>Intro</title>
+    <title>
+      🏡 Intro
+    </title>
   </head>
 
   <body class="bg-light">
@@ -156,12 +158,9 @@
       <use template="navbar"></use>
 
       <div class="container">
-        <h2 class="text-center">
-          Welcome to my Diary
+        <h2 class="text-center text-italic">
+          <span class="text-dark">Quick Start</span>
         </h2>
-        <div class="intro-font-logo text-primary text-center">
-          <i class="bi bi-journal-bookmark-fill"></i>
-        </div>
       </div>
 
     </main>
@@ -172,7 +171,9 @@
 
   <head>
     <use template="common-head"></use>
-    <title>Profile</title>
+    <title>
+      👤 Profile
+    </title>
   </head>
 
   <body class="bg-light">
@@ -247,9 +248,8 @@
 
 <template name="hashtag">
   <div class="hashtag btn btn-sm btn-outline-primary">
-    <!-- <i :class="bi {{}}"></i> -->
-    <!-- <slot name="icon"></slot> -->
     <span>
+      <!-- <i :class="bi {{}}"></i> -->
       #
       <slot name="name"></slot>
     </span>

@@ -25,6 +25,7 @@ type
     id*       : string
     timestamp*: UnixTimestamp
     title*    : string
+    path*     : Path
     hashtags* : seq[HashTag]
 
 
@@ -283,6 +284,7 @@ func renderNote(note: XmlNode, id: string, timestamp: UnixTimestamp, path: Path,
         of   "article"    : note.articleElement
         of   "tags"       : note.noteTags.wrap(templates)
         of   "action_btns": raisev "no defined yet"
+        of   "title"      : newText note.findTitle
         else              : templates[tname]
       else                : shallowCopy x
     else                  : x
@@ -309,8 +311,8 @@ func notesItemRows(notes: seq[NoteItem]; templates): XmlNode =
           of   "slot": 
             case  x.attr"name"
             of    "title": newText n.title
-            of    "date" : newText "today"
-            of    "tags" : newText "wtf"
+            of    "date" : newText $n.timestamp
+            of    "tags" : n.hashtags.wrap templates
             of    "score": newText "-"
             else         : raisev "invalid field"
           else           : 
@@ -344,7 +346,6 @@ func `notes.html`(templates; notes: seq[NoteItem]): XmlNode =
       of    "use"             : templates[x.attr"template"]
       of    "score-fn-options": fnScores()
       of    "notes-rows"      : notesItemRows(notes, templates)
-      of    "notes-page-title": newText "Keeep" # XXX from config
       else                    : shallowCopy x
     else                      : x
 
@@ -417,6 +418,7 @@ proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) =
     add notes, NoteItem(
       id       : id, 
       timestamp: timestamp, 
+      path     : p,
       title    : findTitle doc, 
       hashtags : noteTags  doc)
     writeHtml path, html 
