@@ -23,7 +23,7 @@ type
   Note* = ref object
     id*       : string
     path*     : Path         ## original file path
-    timestamp*: Datetime
+    timestamp*: int
     content*  : XmlNode
     hashtags* : seq[HashTag]
 
@@ -380,14 +380,25 @@ proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) =
   
   for p in discover notesDir:
     echo "+ ", p
+
+    var isTampered = false
     let 
       doc   = parseHtmlFromFile p
       note  = initNote(doc, p)
-      html  = renderHtml(note, templates)
-      fname = extractFilename $p
 
+    if note.id == "":
+      discard
+
+    if note.timestamp == 0:
+      discard
+    else:
+      discard
     # TODO write time if not exists
     # TODO write id   if not exists
+  
+    let  
+      html  = renderHtml(note, templates)
+      fname = extractFilename $p
 
     add notes, note
     writeHtml saveNoteDir/fname, html
