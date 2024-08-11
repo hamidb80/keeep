@@ -4,7 +4,7 @@ import std/[
   times,
   tables, strtabs,
   os, paths, streams,
-  algorithm,
+  algorithm, oids,
   sugar]
 
 import pkg/htmlparser
@@ -19,12 +19,12 @@ type
     ## data   tag: #page: 2
     name*, value*: string
 
+  UnixTimestamp* = int
 
-  Note* = ref object
+  NoteItem* = object
     id*       : string
-    path*     : Path         ## original file path
-    timestamp*: int
-    content*  : XmlNode
+    timestamp*: UnixTimestamp
+    title*    : string
     hashtags* : seq[HashTag]
 
 
@@ -32,7 +32,7 @@ using
   x: XmlNode
   p: Path
   s: string
-  n: Note
+  n: NoteItem
   templates: Table[string, XmlNode]
 
 const 
@@ -43,10 +43,13 @@ func initHashTag(name, val: string): HashTag =
 
 # ---------------------------------------
 
+template str(smth): untyped =
+  $smth
+
 template `<<`(smth): untyped {.dirty.} =
   result.add  smth
 
-template raisev(msg): untyped {.dirty.} =
+template raisev(msg): untyped =
   raise newException(ValueError, msg)
 
 template impossible: untyped = 
@@ -190,45 +193,37 @@ func findTitle(x): string =
   of 0: raisev "cannot find any header tag (h1 .. h6) in the note"
   else: titles[0].innerText
 
-
-func initNote(html: sink XmlNode, path: Path): Note =
-  template articleResolver(doc): untyped =
-    result.content = doc
-
-  result = Note(path: path)
-    
-  if html.isElement:
-    case html.tag
+func extractNoteElement(x): XmlNode = 
+  if x.isElement:
+    case x.tag
     of "document": # automatically generated tag for wrapping multiple tags
-      for el in html:
-        if el.kind == xnElement:
-          case el.tag
-          of "article": 
-            articleResolver el
+      for n in x:
+        if n.isElement and n.tag == "note":
+          return n
+      raisev "cannot find <note> element"
+    of "note": return x
+    else     : raisev "the note should have at least these tags at the root: artice, tags"
+  else       : raisev "provided node as XML is not element kind"
 
-          of "tags":
-            result.hashtags = el.innerText.parseHashTags
 
-          of "action_btns":
-            discard
+func articleElement(x): XmlNode = 
+  for n in x:
+    if n.isElement:
+      case n.tag
+      of "article": return n
+      else        : discard
 
-          of "id": 
-            result.id = el.innerText
-          
-          # of "time": 
-          #   result.timestamp = fromUnix parseInt strip el.innerText
-          
-          else: 
-            raisev "invalid tag in direct child of html file: " & el.tag
-    
-    of "article": # he document only has single article element
-      articleResolver html
+  raisev "cannot find <article> element"
 
-    else:
-      raisev "the note should have at least these tags at the root: artice, tags"
+func noteTags(x): seq[HashTag] = 
+  for n in x:
+    if n.isElement:
+      case n.tag
+      of "tags": return parseHashTags n.innerText
+      else     : discard
 
-  else:
-    raisev "provided node as HTML is not element kind"
+  raisev "cannot find <tags> element"
+
 
 func map(father: var XmlNode, src: XmlNode, mapper: proc(x: XmlNode): XmlNode) {.effectsOf: mapper.} = 
   if src.isWrapper:
@@ -242,7 +237,7 @@ func map(father: var XmlNode, src: XmlNode, mapper: proc(x: XmlNode): XmlNode) {
       map father, el, mapper
 
     else:
-      father.add el
+      add father, el
 
       if el.isElement: # and src.isElement:
         for n in src:
@@ -278,15 +273,15 @@ func wrap(hashtags: seq[HashTag], templates): XmlNode =
 func newHtmlDoc: XmlNode = 
   newElement "html"
 
-func renderHtml(n; templates): XmlNode = 
+func renderNote(note: XmlNode, id: string, timestamp: UnixTimestamp, path: Path, templates): XmlNode =
   proc repl(x): XmlNode =
     if x.isElement:
       case x.tag
       of "use":
         let  tname = x.attr"template"
         case tname
-        of   "article"    : n.content
-        of   "tags"       : n.hashtags.wrap(templates)
+        of   "article"    : note.articleElement
+        of   "tags"       : note.noteTags.wrap(templates)
         of   "action_btns": raisev "no defined yet"
         else              : templates[tname]
       else                : shallowCopy x
@@ -298,8 +293,13 @@ func renderHtml(n; templates): XmlNode =
 template xa(attrs): XmlAttributes = 
   toXmlAttributes attrs
 
-func notesItemRows(notes: seq[Note]; templates): XmlNode = 
+func notesItemRows(notes: seq[NoteItem]; templates): XmlNode = 
   result = newWrapper()
+
+  proc ctx(n; varname: string): string = 
+    case varname
+    of "link": "/notes/" & n.id & ".html"
+    else     : raisev "invalid var: " & varname 
 
   for n in notes:
     let repl = capture n:
@@ -308,12 +308,22 @@ func notesItemRows(notes: seq[Note]; templates): XmlNode =
           case x.tag
           of   "slot": 
             case  x.attr"name"
-            of    "title": newText n.content.findTitle
+            of    "title": newText n.title
             of    "date" : newText "today"
             of    "tags" : newText "wtf"
             of    "score": newText "-"
             else         : raisev "invalid field"
-          else           : shallowCopy x
+          else           : 
+            var newAttrs: seq[(string, string)]
+
+            if not isNil x.attrs:
+              for k, v in x.attrs:
+                newAttrs.add:
+                  if k[0] == ':': (k.substr 1, ctx(n, v))
+                  else          : (k, v)
+                  
+            newXmlTree x.tag, [], xa newattrs
+
         else             : x
       
     map result, templates["notes-page.note-item"], repl
@@ -325,18 +335,18 @@ func fnScores: XmlNode =
   for n in ["date", "by_date_passed", "failed_times"]:
     result.add newXmlTree("option", [newText n], xa {"value": n})
 
-func `notes.html`(templates; notes: seq[Note]): XmlNode = 
+func `notes.html`(templates; notes: seq[NoteItem]): XmlNode = 
   let t = templates["notes-page"]
 
   func identityXml(x): XmlNode = 
     if x.isElement: 
       case  x.tag
-      of    "use":              templates[x.attr"template"]
+      of    "use"             : templates[x.attr"template"]
       of    "score-fn-options": fnScores()
-      of    "notes-rows":       notesItemRows(notes, templates)
+      of    "notes-rows"      : notesItemRows(notes, templates)
       of    "notes-page-title": newText "Keeep" # XXX from config
-      else:                     shallowCopy x
-    else:                       x
+      else                    : shallowCopy x
+    else                      : x
 
   result = newHtmlDoc()
   map result, t, identityXml
@@ -352,8 +362,8 @@ func `index.html`(templates): XmlNode =
     if x.isElement: 
       case  x.tag
       of    "use": templates[x.attr"template"]
-      else:        shallowCopy x
-    else:                      x
+      else       : shallowCopy x
+    else         : x
 
   result = newHtmlDoc()
   map result, t, identityXml
@@ -365,8 +375,8 @@ func `profile.html`(templates): XmlNode =
     if x.isElement: 
       case  x.tag
       of    "use": templates[x.attr"template"]
-      else:        shallowCopy x
-    else:                      x
+      else       : shallowCopy x
+    else         : x
 
   result = newHtmlDoc()
   map result, t, identityXml
@@ -376,37 +386,45 @@ func `profile.html`(templates): XmlNode =
 
 proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) = 
   let templates = loadHtmlTemplates templateDir
-  var notes: seq[Note]
+  var notes: seq[NoteItem]
   
+  template tamper(stmt): untyped = 
+    isTampered = true
+    stmt
+
   for p in discover notesDir:
     echo "+ ", p
+    
+    var isTampered   = false
+    let doc          = extractNoteElement parseHtmlFromFile p
+    let docId        = doc.attr"id"
+    let docTimestamp = doc.attr"timestamp"
+    let
+      id = 
+        if    docid == "": tamper(p.str.splitFile.name & '-' & $genOid())
+        else: docid
+      timestamp = 
+        if docTimestamp == "": tamper toUnix toTime now()
+        else                 : parseint docTimestamp
 
-    var isTampered = false
-    let 
-      doc   = parseHtmlFromFile p
-      note  = initNote(doc, p)
+    if isTampered:
+      doc.attrs = xa {"id": id, "timestamp": $timestamp}
+      writefile $p, $Html doc
 
-    if note.id == "":
-      discard
+    let path = saveNoteDir/(id & ".html")
+    let html = renderNote(doc, id, timestamp, p, templates)
 
-    if note.timestamp == 0:
-      discard
-    else:
-      discard
-    # TODO write time if not exists
-    # TODO write id   if not exists
-  
-    let  
-      html  = renderHtml(note, templates)
-      fname = extractFilename $p
-
-    add notes, note
-    writeHtml saveNoteDir/fname, html
+    add notes, NoteItem(
+      id       : id, 
+      timestamp: timestamp, 
+      title    : findTitle doc, 
+      hashtags : noteTags  doc)
+    writeHtml path, html 
 
   echo "+ index.html"
-  writeHtml saveDir/"index.html",    `index.html`(   templates)
+  writeHtml saveDir/"index.html",    `index.html`(templates)
   echo "+ notes.html"
-  writeHtml saveDir/"notes.html",    `notes.html`(   templates, notes)
+  writeHtml saveDir/"notes.html",    `notes.html`(templates, notes)
   echo "+ profile.html"
   writeHtml saveDir/"profile.html", `profile.html`(templates)
 

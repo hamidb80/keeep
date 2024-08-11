@@ -78,7 +78,7 @@
               <i class="bi bi-search"></i>
               <label for="">Search</label>
             </h5>
-            <input type="text" class="form-control w-100" placeholder="title, tags" />
+            <input type="text" class="form-control w-100" placeholder="id, filename, title, tags" />
           </search>
 
           <table class="table table-hover bg-white">
@@ -98,6 +98,10 @@
               <th>
                 <i class="bi bi-percent"></i>
                 <span>Score</span>
+              </th>
+              <th>
+                <i class="bi bi-clock-history"></i>
+                <span>History</span>
               </th>
             </thead>
             <tbody>
@@ -152,11 +156,11 @@
       <use template="navbar"></use>
 
       <div class="container">
-        <h2>
-          Intro
+        <h2 class="text-center">
+          Welcome to my Diary
         </h2>
-        <div>
-          hey
+        <div class="intro-font-logo text-primary text-center">
+          <i class="bi bi-journal-bookmark-fill"></i>
         </div>
       </div>
 
@@ -256,7 +260,7 @@
 <template name="notes-page.note-item">
   <tr>
     <td>
-      <a href="link">
+      <a :href="link" smooth-link dir="auto" class="text-decoration-none">
         <slot name="title"></slot>
       </a>
     </td>
@@ -268,6 +272,9 @@
     </td>
     <td>
       <slot name="score"></slot>
+    </td>
+    <td>
+      <!-- history - to be filled -->
     </td>
   </tr>
 </template>
