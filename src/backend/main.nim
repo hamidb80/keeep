@@ -1,6 +1,6 @@
 import std/[
   xmltree, 
-  strutils, sequtils,
+  strutils, strformat, sequtils,
   times,
   tables, strtabs,
   os, paths, streams,
@@ -167,6 +167,11 @@ proc loadHtmlTemplates(p): Table[string, XmlNode] =
         raisev "only <template> is allowed in top level"
 
 
+func getTemplate(templates; name: string): XmlNode = 
+  if name in templates: templates[name]
+  else: raisev "cannot find template: '" & name & "'"
+
+
 func dfs(x; visit: proc(n: XmlNode): bool) {.effectsOf: visit.} = 
   ## DFS traversesal
   if x.visit and x.isElement:
@@ -267,9 +272,8 @@ func wrap(hashtags: seq[HashTag], templates): XmlNode =
         # of "icon": newText ht.name
         else:      raisev "invalid property for hashtag render: " & k
     
-    for n in renderTemplate(templates["hashtag"], ctx):
+    for n in renderTemplate(templates.getTemplate"hashtag", ctx):
       << n
-
   
 func newHtmlDoc: XmlNode = 
   newElement "html"
@@ -285,12 +289,12 @@ func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
         of   "article"    : doc.articleElement
         of   "tags"       : note.hashtags.wrap(templates)
         of   "action_btns": raisev "no defined yet"
-        else              : templates[tname]
+        else              : templates.getTemplate tname
       else                : shallowCopy x
     else                  : x
   
   result = newHtmlDoc()
-  map result, templates["note-page"], repl
+  map result, templates.getTemplate"note-page", repl
 
 template xa(attrs): XmlAttributes = 
   toXmlAttributes attrs
@@ -328,7 +332,7 @@ func notesItemRows(notes: seq[NoteItem]; templates): XmlNode =
 
         else             : x
       
-    map result, templates["notes-page.note-item"], repl
+    map result, templates.getTemplate"notes-page.note-item", repl
     
 
 func fnScores: XmlNode =
@@ -338,12 +342,12 @@ func fnScores: XmlNode =
     result.add newXmlTree("option", [newText n], xa {"value": n})
 
 func `notes.html`(templates; notes: seq[NoteItem]): XmlNode = 
-  let t = templates["notes-page"]
+  let t = templates.getTemplate"notes-page"
 
   func identityXml(x): XmlNode = 
     if x.isElement: 
       case  x.tag
-      of    "use"             : templates[x.attr"template"]
+      of    "use"             : templates.getTemplate x.attr"template"
       of    "score-fn-options": fnScores()
       of    "notes-rows"      : notesItemRows(notes, templates)
       else                    : shallowCopy x
@@ -357,12 +361,12 @@ func `notes.html`(templates; notes: seq[NoteItem]): XmlNode =
   #   show name, tag, time, score
 
 func `index.html`(templates): XmlNode = 
-  let t = templates["index-page"]
+  let t = templates.getTemplate"index-page"
 
   func identityXml(x): XmlNode = 
     if x.isElement: 
       case  x.tag
-      of    "use": templates[x.attr"template"]
+      of    "use": templates.getTemplate x.attr"template"
       else       : shallowCopy x
     else         : x
 
@@ -370,12 +374,12 @@ func `index.html`(templates): XmlNode =
   map result, t, identityXml
 
 func `profile.html`(templates): XmlNode = 
-  let t = templates["profile-page"]
+  let t = templates.getTemplate"profile-page"
 
   func identityXml(x): XmlNode = 
     if x.isElement: 
       case  x.tag
-      of    "use": templates[x.attr"template"]
+      of    "use": templates.getTemplate x.attr"template"
       else       : shallowCopy x
     else         : x
 
@@ -387,7 +391,9 @@ func `profile.html`(templates): XmlNode =
 
 proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) = 
   let templates = loadHtmlTemplates templateDir
-  var notes: seq[NoteItem]
+  
+  var pathById: Table[string, Path] # id => file path
+  var notes   : seq[NoteItem]
   
   template tamper(stmt): untyped = 
     isTampered = true
@@ -408,13 +414,17 @@ proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) =
         if docTimestamp == "": tamper toUnix toTime now()
         else                 : parseint docTimestamp
 
-      note = NoteItem(
+    if id in pathById:
+      raisev "Error: Duplicated id! ids of " & $pathById[id] & " and " & $p & "are the same"
+    else:
+      pathById[id] = p
+
+    let note = NoteItem(
         id       : id, 
         timestamp: timestamp, 
         path     : p,
         title    : findTitle doc, 
         hashtags : noteTags  doc)
-
 
     if isTampered:
       doc.attrs = xa {"id": id, "timestamp": $timestamp}
@@ -435,9 +445,35 @@ proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) =
 
   # XXX copy frontend folder
 
+const 
+  appname = "Keeep"
+  help    = dedent fmt"""
+
+    ..:: {appname} ::..
+
+    Commands:
+      - new    [dir path] creates new note in desired directory
+      - build  [dir path] generates static HTML/CSS/JS files in desired directory
+  """
+
 
 when isMainModule:
-  genWebsite Path "./templates.html", 
-             Path "./notes", 
-             Path "./dist",
-             Path "./dist/notes"
+  let params = commandLineParams()
+
+  case params.len
+  of 0: echo help
+  else:
+    case toLowerAscii params[0]
+    of   "build":
+      genWebsite Path "./templates.html", 
+                 Path "./notes", 
+                 Path "./dist",
+                 Path "./dist/notes"
+   
+    of   "new":
+      echo "not implemented"
+    
+    else:
+      echo "Error: invalid command"
+      echo help
+      quit 1
