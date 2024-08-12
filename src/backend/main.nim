@@ -29,6 +29,13 @@ type
     path*     : Path
     hashtags* : seq[HashTag]
 
+  AppConfig* = object
+    templatesFile*: Path
+    notesDir*     : Path
+    buildDir*     : Path
+    mediaDir*     : Path
+    libsDir*      : Path
+    
 
 using 
   x: XmlNode
@@ -39,6 +46,8 @@ using
 
 const 
   htmlPrefix  = "<!DOCTYPE html>"
+  configPath = "./config.ini"
+  
 
 func initHashTag(name, val: string): HashTag = 
   HashTag(name: name, value: val)
@@ -63,8 +72,6 @@ template iff(cond, iftrue, iffalse): untyped =
 
 # ---------------------------------------
 
-func identity[T](t: T): T = t
-
 
 func splitOnce(s; c: char): (string, string) = 
   let parts = s.split(c, 1)
@@ -82,6 +89,12 @@ func newWrapper: XmlNode =
 
 func `/`(a: Path, b: string): Path = 
   Path $a / b
+
+proc mkdir(p) = 
+  discard existsOrCreateDir $p
+
+proc cpdir(src, dest: Path) = 
+  copyDir $src, $dest
 
 
 func toStringImpl(result: var string; x) = 
@@ -390,8 +403,12 @@ func `profile.html`(templates): XmlNode =
   #   export local DB
   #   import DB
 
-proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) = 
-  let templates = loadHtmlTemplates templateDir
+proc genWebsiteFiles(templateDir, libsDir, notesDir, mediaDir, saveDir: Path) = 
+  let saveNoteDir  = saveDir / "notes"
+  let saveMediaDir = saveDir / "media"
+  let saveLibsDir  = saveDir / "libs"
+
+  let templates    = loadHtmlTemplates templateDir
   
   var pathById: Table[string, Path]
   var notes   : seq[NoteItem]
@@ -399,6 +416,11 @@ proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) =
   template tamper(stmt): untyped = 
     isTampered = true
     stmt
+
+  block prepare:
+    mkdir saveNoteDir
+    cpdir mediaDir, saveMediaDir
+    cpdir libsDir , saveLibsDir
 
   for p in discover notesDir:
     echo "+ ", p
@@ -453,14 +475,29 @@ const
     ..:: {appname} ::..
 
     Commands:
-        init                  Creates or repairs config file (config.ini)
+        init                  Creates config file
         new   [path to note]  Creates new note in desired directory
         build                 Generates static HTML/CSS/JS files in desired directory
+        hot   [path to note]  Hot reload; i.e. see changes live
 
     Usage:
         ./app  init
 
   """
+
+
+func toAppConfig(cfg: Config): AppConfig =
+
+  proc gsv(namespace, key: string): string = 
+    getSectionValue(cfg, namespace, key)
+  
+  AppConfig(
+    templatesFile: Path gsv("paths", "template_file"),
+    notesDir     : Path gsv("paths", "notes_dir"),
+    buildDir     : Path gsv("paths", "build_dir"),
+    mediaDir     : Path gsv("paths", "media_dir"),
+    libsDir      : Path gsv("paths", "libs_dir"),
+  )
 
 
 when isMainModule:
@@ -469,20 +506,33 @@ when isMainModule:
   case params.len
   of 0: echo help
   else:
-    case toLowerAscii params[0]
-    of   "build":
-      echo ">> copying libraries"
 
-      echo ">> generating .html files"
-      genWebsite Path "./templates.html", 
-                 Path "./notes", 
-                 Path "./dist",
-                 Path "./dist/notes"
-   
-    of   "new":
-      echo "not implemented"
+    if fileExists configPath:
+      let cfg = toAppConfig loadConfig configPath
+      echo cfg
+      
+      case toLowerAscii params[0]
+      of   "build":
+        mkdir cfg.buildDir
+        echo ">>>> copying libraries"
+
+        echo ">>>> generating HTML files"
+        genWebsiteFiles cfg.templatesFile,
+                        cfg.libsDir,
+                        cfg.notesDir,
+                        cfg.mediaDir,
+                        cfg.buildDir
     
+      of   "new":
+        echo "not implemented"
+      
+      of   "hot":
+        echo "not implemented"
+
+      else:
+        echo "Error: Invalid command: '", params[0], "'"
+        echo help
+        quit 1
+
     else:
-      echo "Error: Invalid command: '", params[0], "'"
-      echo help
-      quit 1
+      raisev "the config file does not exist: " & configPath
