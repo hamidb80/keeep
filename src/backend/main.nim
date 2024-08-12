@@ -5,6 +5,7 @@ import std/[
   tables, strtabs,
   os, paths, streams,
   algorithm, oids,
+  json,
   sugar]
 
 import std/parsecfg
@@ -57,6 +58,9 @@ func initHashTag(name, val: string): HashTag =
 template str(smth): untyped =
   $smth
 
+template xa(attrs): XmlAttributes = 
+  toXmlAttributes attrs
+
 template `<<`(smth): untyped {.dirty.} =
   result.add  smth
 
@@ -89,6 +93,9 @@ func newWrapper: XmlNode =
 
 func `/`(a: Path, b: string): Path = 
   Path $a / b
+
+func `%`(p): JsonNode = 
+  % str p
 
 proc mkdir(p) = 
   discard existsOrCreateDir $p
@@ -277,6 +284,7 @@ func renderTemplate(t: XmlNode, ctx: proc(key: string): XmlNode): XmlNode =
 
 func wrap(hashtags: seq[HashTag], templates): XmlNode = 
   result = newWrapper()
+  let t = templates.getTemplate"hashtag"
   
   for ht in hashtags:
     let ctx = capture ht:
@@ -286,7 +294,7 @@ func wrap(hashtags: seq[HashTag], templates): XmlNode =
         # of "icon": newText ht.name
         else:      raisev "invalid property for hashtag render: " & k
     
-    for n in renderTemplate(templates.getTemplate"hashtag", ctx):
+    for n in renderTemplate(t, ctx):
       << n
   
 func newHtmlDoc: XmlNode = 
@@ -303,6 +311,9 @@ func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
         of   "article"    : doc.articleElement
         of   "tags"       : note.hashtags.wrap(templates)
         of   "action_btns": raisev "no defined yet"
+        of   "note-id"    : newText note.id
+        of   "note-path"  : newText $note.path
+        of   "date"       : newText $note.timestamp
         else              : templates.getTemplate tname
       else                : shallowCopy x
     else                  : x
@@ -310,22 +321,22 @@ func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
   result = newHtmlDoc()
   map result, templates.getTemplate"note-page", repl
 
-template xa(attrs): XmlAttributes = 
-  toXmlAttributes attrs
 
 func notesItemRows(notes: seq[NoteItem]; templates): XmlNode = 
   result = newWrapper()
 
-  proc ctx(n; varname: string): string = 
-    case varname
-    of "link": "/notes/" & n.id & ".html"
-    else     : raisev "invalid var: " & varname 
+  proc ctx(i: int, n: NoteItem, key: string): string = 
+    case key
+    of "link" : "/notes/" & n.id & ".html"
+    of "index": $i
+    else      : raisev "invalid key: " & key 
 
-  for n in notes:
+  for i, n in notes:
     let repl = capture n:
       proc (x): XmlNode =
         if x.isElement:
           case x.tag
+          of   "note-json" : newXmlTree("data", [newText str %n], xa {"note-data": "", "index": $i, "hidden": ""})
           of   "slot": 
             case  x.attr"name"
             of    "title": newText n.title
@@ -339,7 +350,7 @@ func notesItemRows(notes: seq[NoteItem]; templates): XmlNode =
             if not isNil x.attrs:
               for k, v in x.attrs:
                 newAttrs.add:
-                  if k[0] == ':': (k.substr 1, ctx(n, v))
+                  if k[0] == ':': (k.substr 1, ctx(i, n, v))
                   else          : (k, v)
                   
             newXmlTree x.tag, [], xa newattrs
@@ -355,7 +366,7 @@ func fnScores: XmlNode =
   for n in ["date", "by_date_passed", "failed_times"]:
     result.add newXmlTree("option", [newText n], xa {"value": n})
 
-func `notes.html`(templates; notes: seq[NoteItem]): XmlNode = 
+func `notes.html`(templates; notes: seq[NoteItem], suggestedTags: seq[HashTag]): XmlNode = 
   let t = templates.getTemplate"notes-page"
 
   func identityXml(x): XmlNode = 
@@ -364,6 +375,7 @@ func `notes.html`(templates; notes: seq[NoteItem]): XmlNode =
       of    "use"             : templates.getTemplate x.attr"template"
       of    "score-fn-options": fnScores()
       of    "notes-rows"      : notesItemRows(notes, templates)
+      of    "tags-by-usage"   : suggestedTags.wrap templates
       else                    : shallowCopy x
     else                      : x
 
@@ -380,9 +392,9 @@ func `index.html`(templates): XmlNode =
   func identityXml(x): XmlNode = 
     if x.isElement: 
       case  x.tag
-      of    "use": templates.getTemplate x.attr"template"
-      else       : shallowCopy x
-    else         : x
+      of    "use"          : templates.getTemplate x.attr"template"
+      else                 : shallowCopy x
+    else                   : x
 
   result = newHtmlDoc()
   map result, t, identityXml
@@ -412,6 +424,7 @@ proc genWebsiteFiles(templateDir, libsDir, notesDir, mediaDir, saveDir: Path) =
   
   var pathById: Table[string, Path]
   var notes   : seq[NoteItem]
+  var tagsCount = initCountTable[string]()
   
   template tamper(stmt): untyped = 
     isTampered = true
@@ -449,6 +462,9 @@ proc genWebsiteFiles(templateDir, libsDir, notesDir, mediaDir, saveDir: Path) =
         title    : findTitle doc, 
         hashtags : noteTags  doc)
 
+    for t in note.hashtags:
+      inc tagsCount, t.name
+
     if isTampered:
       doc.attrs = xa {"id": id, "timestamp": $timestamp}
       writefile $p, $Html doc
@@ -459,10 +475,14 @@ proc genWebsiteFiles(templateDir, libsDir, notesDir, mediaDir, saveDir: Path) =
     add notes, note
     writeHtml path, html 
 
+  sort tagsCount
+
+  let suggestedTags = tagsCount.keys.toseq.mapit initHashTag(it, "")
+
   echo "+ index.html"
   writeHtml saveDir/"index.html",    `index.html`(templates)
   echo "+ notes.html"
-  writeHtml saveDir/"notes.html",    `notes.html`(templates, notes)
+  writeHtml saveDir/"notes.html",    `notes.html`(templates, notes, suggestedTags)
   echo "+ profile.html"
   writeHtml saveDir/"profile.html", `profile.html`(templates)
 
