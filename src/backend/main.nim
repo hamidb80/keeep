@@ -327,9 +327,10 @@ func notesItemRows(notes: seq[NoteItem]; templates): XmlNode =
 
   proc ctx(i: int, n: NoteItem, key: string): string = 
     case key
-    of "link" : "/notes/" & n.id & ".html"
-    of "index": $i
-    else      : raisev "invalid key: " & key 
+    of "link"   : "/notes/" & n.id & ".html"
+    of "index"  : $i
+    of "note-id": n.id
+    else        : raisev "invalid key: " & key 
 
   for i, n in notes:
     let repl = capture n:
@@ -360,12 +361,6 @@ func notesItemRows(notes: seq[NoteItem]; templates): XmlNode =
     map result, templates.getTemplate"notes-page.note-item", repl
     
 
-func fnScores: XmlNode =
-  result = newWrapper()
-
-  for n in ["date", "by_date_passed", "failed_times"]:
-    result.add newXmlTree("option", [newText n], xa {"value": n})
-
 func `notes.html`(templates; notes: seq[NoteItem], suggestedTags: seq[HashTag]): XmlNode = 
   let t = templates.getTemplate"notes-page"
 
@@ -373,7 +368,6 @@ func `notes.html`(templates; notes: seq[NoteItem], suggestedTags: seq[HashTag]):
     if x.isElement: 
       case  x.tag
       of    "use"             : templates.getTemplate x.attr"template"
-      of    "score-fn-options": fnScores()
       of    "notes-rows"      : notesItemRows(notes, templates)
       of    "tags-by-usage"   : suggestedTags.wrap templates
       else                    : shallowCopy x

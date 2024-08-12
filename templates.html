@@ -70,13 +70,12 @@
 
         <div class="my-4">
           <h5>
-            <span for="">
+            <span>
               <i class="bi bi-percent"></i>
               Score Function
             </span>
           </h5>
-          <select name="" id="" class="form-select">
-            <score-fn-options />
+          <select id="score-functions-input" class="form-select">
           </select>
 
           <button class="btn btn-sm btn-outline-primary w-100 mt-1" id="remember-btn">
@@ -93,7 +92,7 @@
           <search class="my-4">
             <h5>
               <i class="bi bi-search"></i>
-              <span for="">Search</span>
+              <span>Search</span>
             </h5>
             <input type="text" class="form-control w-100" placeholder="id, filename, title" id="search-input" />
           </search>
@@ -145,7 +144,7 @@
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="notes-rows">
               <notes-rows />
             </tbody>
           </table>
@@ -293,7 +292,7 @@
 
 
 <template name="notes-page.note-item">
-  <tr>
+  <tr class="note-item" :note-id="note-id">
     <note-json />
     <td>
       <a :href="link" smooth-link dir="auto" class="text-decoration-none">
