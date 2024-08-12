@@ -7,6 +7,7 @@ import std/[
   algorithm, oids,
   sugar]
 
+import std/parsecfg
 import pkg/htmlparser
 
 # ---------------------------------------
@@ -392,7 +393,7 @@ func `profile.html`(templates): XmlNode =
 proc genWebsite(templateDir, notesDir, saveDir, saveNoteDir: Path) = 
   let templates = loadHtmlTemplates templateDir
   
-  var pathById: Table[string, Path] # id => file path
+  var pathById: Table[string, Path]
   var notes   : seq[NoteItem]
   
   template tamper(stmt): untyped = 
@@ -452,8 +453,13 @@ const
     ..:: {appname} ::..
 
     Commands:
-      - new    [dir path] creates new note in desired directory
-      - build  [dir path] generates static HTML/CSS/JS files in desired directory
+        init                  Creates or repairs config file (config.ini)
+        new   [path to note]  Creates new note in desired directory
+        build                 Generates static HTML/CSS/JS files in desired directory
+
+    Usage:
+        ./app  init
+
   """
 
 
@@ -465,6 +471,9 @@ when isMainModule:
   else:
     case toLowerAscii params[0]
     of   "build":
+      echo ">> copying libraries"
+
+      echo ">> generating .html files"
       genWebsite Path "./templates.html", 
                  Path "./notes", 
                  Path "./dist",
@@ -474,6 +483,6 @@ when isMainModule:
       echo "not implemented"
     
     else:
-      echo "Error: invalid command"
+      echo "Error: Invalid command: '", params[0], "'"
       echo help
       quit 1
