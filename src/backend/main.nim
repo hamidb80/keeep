@@ -543,7 +543,7 @@ func toAppConfig(cfg: Config): AppConfig =
     libsDir      : Path gsv("paths", "libs_dir"),
   )
 
-# TODO RSS
+# TODO RSS for all tags, and some specific tags stated in the config file
 
 when isMainModule:
   let params = commandLineParams()

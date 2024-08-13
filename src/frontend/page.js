@@ -72,6 +72,15 @@ function insertAtCurrPos(el, text) {
   el.value = prev + text + ' \n' + next
 }
 
+function downloadFile(name, mime, content) {
+  let a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([content], { type: mime }))
+  a.download = name
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}
+
 // DataBase -------------------------------------------
 
 // ----- low level
@@ -98,10 +107,10 @@ function getAllItemsDB() {
   let result = {}
   for (let i = 0; i < localStorage.length; i++) {
     let key = localStorage.key(i)
-    let value = localStorage.getItem(key)
-    result[key] = value
+    let valueStr = localStorage.getItem(key)
+    result[key] = JSON.parse(valueStr)
   }
-  return key
+  return result
 }
 
 // ----- domain level
@@ -134,12 +143,14 @@ function addNoteReviewHistory(noteId, utime, score, minSecOffset) {
 var allNotes = {}
 var currentNoteId = null
 
+
 const scoreFunctions = {
-  'passed': (now, created, history) => now - created,
-  'history_len': (now, created, history) => history.length,
+  // TODO add note object
+  'passed time': (now, created, history) => now - created,
+  'history len': (now, created, history) => history.length,
 }
 
-var current_score_function = 'passed'
+var current_score_function = 'passed time'
 
 
 // Unpoly Setup ----------------------------------------
@@ -188,13 +199,18 @@ up.compiler('#tag-query-btn', el => {
 
 up.compiler('#import-db-btn', el => {
   el.onclick = () => {
-    // TODO
+    let target = newElement('input', { type: "file", accept: ".json" })
+    target.onchange = console.log
+    target.click()
   }
 })
 
 up.compiler('#export-db-btn', el => {
   el.onclick = () => {
-    // TODO
+    downloadFile(
+      'keep-data.json',
+      'application/json',
+      JSON.stringify(getAllItemsDB()))
   }
 })
 

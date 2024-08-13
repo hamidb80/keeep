@@ -67,19 +67,36 @@
               Review History
             </span>
           </h4>
-          <ul>
-            <!-- TODO to be filled at runtime -->
-            <template>
-              <li>
-                <span>
-                  <slot name="date" />
-                </span>
-                <span>
-                  <slot name="score" />
-                </span>
-              </li>
-            </template>
-          </ul>
+
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>
+                  <span>
+                    Date
+                  </span>
+                </th>
+                <th>
+                  <span>
+                    Score
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- TODO to be filled at runtime -->
+              <template>
+                <tr>
+                  <td>
+                    <slot name="date" />
+                  </td>
+                  <td>
+                    <slot name="score" />
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
         </div>
       </div>
     </main>
@@ -269,24 +286,28 @@
                 Actions
               </span>
             </h3>
+
             <button class="btn btn-outline-primary" id="import-db-btn">
               <i class="bi bi-box-arrow-in-right"></i>
               <span>
                 Import Data (merge)
               </span>
             </button>
+
             <button class="btn btn-outline-primary" id="export-db-btn">
               <i class="bi bi-box-arrow-right"></i>
               <span>
                 Export Data (download)
               </span>
             </button>
+
             <button class="btn btn-outline-primary" id="clear-db-btn">
               <i class="bi bi-trash2"></i>
               <span>
                 Clear Data
               </span>
             </button>
+
           </section>
           <section class="my-3">
             <h3>
