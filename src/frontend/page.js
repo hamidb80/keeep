@@ -139,7 +139,7 @@ const scoreFunctions = {
   'history_len': (now, created, history) => history.length,
 }
 
-const default_score_function = 'passed'
+var current_score_function = 'passed'
 
 
 // Unpoly Setup ----------------------------------------
@@ -210,6 +210,7 @@ up.compiler('#clear-db-btn', el => {
 up.compiler('#score-functions-input', select => {
   function valueChanged() {
     let now = unixNow()
+    current_score_function = select.value
     let fn = scoreFunctions[select.value]
     let coeff = (q`#inverse-result-checkbox`.checked ? -1 : +1)
     let acc = mapObjAcc(allNotes,
@@ -231,7 +232,7 @@ up.compiler('#score-functions-input', select => {
       .keys(scoreFunctions)
       .map(t => newElement("option", { value: t }, t))
   )
-  select.value = default_score_function
+  select.value = current_score_function
   select.onchange = valueChanged
   valueChanged()
 })
