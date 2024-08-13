@@ -25,3 +25,7 @@ article figure img {
 [hidden] {
   display: none;
 }
+
+th {
+  text-transform: none !important;
+}
