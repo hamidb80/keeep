@@ -63,18 +63,18 @@
       <use template="navbar"></use>
 
       <div class="container">
-        <h2>
+        <h1>
           <i class="bi bi-stickies"></i>
           <span>Notes</span>
-        </h2>
+        </h1>
 
         <div class="my-4">
-          <h5>
+          <h2>
             <span>
               <i class="bi bi-percent"></i>
               Score Function
             </span>
-          </h5>
+          </h2>
           <select id="score-functions-input" class="form-select">
           </select>
 
@@ -90,18 +90,18 @@
 
         <div class="my-5">
           <search class="my-4">
-            <h5>
+            <h2>
               <i class="bi bi-search"></i>
               <span>Search</span>
-            </h5>
+            </h2>
             <input type="text" class="form-control w-100" placeholder="id, filename, title" id="search-input" />
           </search>
 
           <search class="my-4">
-            <h5 class="my-0">
+            <h2 class="my-0">
               <i class="bi bi-hash"></i>
               <span>Tag Query</span>
-            </h5>
+            </h2>
             <div class="my-2" id="suggested-tags">
               <tags-by-usage />
             </div>
@@ -115,11 +115,11 @@
         </div>
 
         <div>
-          <h5>
+          <h2>
             <i class="bi bi-table"></i>
             <span>List</span>
-          </h5>
-          <table class="table table-hover bg-white">
+          </h2>
+          <table class="table table-hover bg-white" border>
             <thead>
               <tr>
                 <th>
@@ -167,9 +167,9 @@
       <use template="navbar"></use>
 
       <div class="container">
-        <h2>
+        <h1>
           About
-        </h2>
+        </h1>
         <div>
           not yet
         </div>
@@ -192,9 +192,9 @@
       <use template="navbar"></use>
 
       <div class="container">
-        <h2 class="text-center text-italic">
+        <h1 class="text-center text-italic">
           <span class="text-dark">Quick Start</span>
-        </h2>
+        </h1>
       </div>
 
     </main>
@@ -215,18 +215,18 @@
       <use template="navbar"></use>
 
       <div class="container">
-        <h2>
+        <h1>
           <i class="bi bi-person-square"></i>
           <span>Profile</span>
-        </h2>
+        </h1>
         <div class="my-4">
           <section class="my-3">
-            <h5>
+            <h2>
               <i class="bi bi-nut"></i>
               <span>
                 Actions
               </span>
-            </h5>
+            </h2>
             <button class="btn btn-outline-primary">
               <i class="bi bi-box-arrow-in-right"></i>
               <span>
@@ -247,12 +247,12 @@
             </button>
           </section>
           <section class="my-3">
-            <h5>
+            <h2>
               <i class="bi bi-graph-up"></i>
               <span>
                 Activity
               </span>
-            </h5>
+            </h2>
           </section>
         </div>
       </div>
@@ -281,13 +281,10 @@
 <!-- components -->
 
 <template name="hashtag">
-  <div class="hashtag btn btn-sm btn-outline-primary">
-    <span>
-      <!-- <i :class="bi {{}}"></i> -->
-      #
-      <slot name="name"></slot>
-    </span>
-  </div>
+  <span class="hashtag btn btn-sm btn-outline-primary">
+    <!-- <i :class="bi {{}}"></i> -->
+    #<slot name="name"></slot>
+  </span>
 </template>
 
 

@@ -4,10 +4,18 @@ function flr(n) {
   return Math.floor(n)
 }
 
+function p2(smth) {
+  return String(smth).padStart(2, '0')
+}
 
 function unixToFormattedDate(unixTimestamp) {
-  let d = new Date(unixTimestamp * 1000) // Convert to milliseconds
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  let oo = new Date(unixTimestamp * 1000) // Convert to milliseconds
+  let yyyy = oo.getFullYear()
+  let mm = p2(oo.getMonth() + 1)
+  let dd = p2(oo.getDate())
+  let hh = p2(oo.getHours())
+  let tt = p2(oo.getMinutes())
+  return `${yyyy}-${mm}-${dd} ${hh}:${tt}`
 }
 
 function unixNow() {
@@ -129,16 +137,12 @@ up.compiler('#tag-query-btn', el => {
 })
 
 up.compiler('#score-functions-input', select => {
-  select.replaceChildren(
-    ...Object
-      .keys(score_functions)
-      .map(t => newElement("option", { value: t }, t))
-  )
-
-  select.onchange = () => {
+  function valueChanged() {
     let now = unixNow()
     let fn = score_functions[select.value]
-    let acc = mapObjAcc(allNotes, (id, note) => [id, fn(now, note.timestamp, [])]) // [id, score]
+    let acc = mapObjAcc(allNotes,
+      (id, note) => [id, fn(now, note.timestamp, [])]) // [id, score]
+
     acc.sort((a, b) => b[1] - a[1]) // sort by score
 
     let sortedNotes = acc.map(([id, score]) => {
@@ -150,5 +154,12 @@ up.compiler('#score-functions-input', select => {
     q`#notes-rows`.replaceChildren(...sortedNotes)
   }
 
-  // select.value = default_score_function
+  select.replaceChildren(
+    ...Object
+      .keys(score_functions)
+      .map(t => newElement("option", { value: t }, t))
+  )
+  select.value = default_score_function
+  select.onchange = valueChanged
+  valueChanged()
 })
