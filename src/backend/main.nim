@@ -301,6 +301,11 @@ func newHtmlDoc: XmlNode =
   newElement "html"
 
 func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
+  proc ctx(key: string): string = 
+    case key
+    of   "note-id"  : note.id
+    else            : raisev "invalid key: " & key 
+
   proc repl(x): XmlNode =
     if x.isElement:
       case x.tag
@@ -315,7 +320,17 @@ func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
         of   "note-path"  : newText $note.path
         of   "date"       : newText $note.timestamp
         else              : templates.getTemplate tname
-      else                : shallowCopy x
+      else                : 
+        var newAttrs: seq[(string, string)]
+
+        if not isNil x.attrs:
+          for k, v in x.attrs:
+            newAttrs.add:
+              if k[0] == ':': (k.substr 1, ctx(v))
+              else          : (k, v)
+              
+        newXmlTree x.tag, [], xa newattrs
+
     else                  : x
   
   result = newHtmlDoc()
@@ -327,10 +342,11 @@ func notesItemRows(notes: seq[NoteItem]; templates): XmlNode =
 
   proc ctx(i: int, n: NoteItem, key: string): string = 
     case key
-    of "link"   : "/notes/" & n.id & ".html"
-    of "index"  : $i
-    of "note-id": n.id
-    else        : raisev "invalid key: " & key 
+    of   "link"     : "/notes/" & n.id & ".html"
+    of   "index"    : $i
+    of   "timestamp": $n.timestamp 
+    of   "note-id"  : n.id
+    else            : raisev "invalid key: " & key 
 
   for i, n in notes:
     let repl = capture n:
@@ -340,12 +356,12 @@ func notesItemRows(notes: seq[NoteItem]; templates): XmlNode =
           of   "note-json" : newXmlTree("data", [newText str %n], xa {"note-data": "", "index": $i, "hidden": ""})
           of   "slot": 
             case  x.attr"name"
-            of    "title": newText n.title
-            of    "date" : newText $n.timestamp
-            of    "tags" : n.hashtags.wrap templates
-            of    "score": newText "-"
-            else         : raisev "invalid field"
-          else           : 
+            of    "title"     : newText n.title
+            of    "timestamp" : newText $n.timestamp
+            of    "tags"      : n.hashtags.wrap templates
+            of    "score"     : newText "-"
+            else              : raisev "invalid field"
+          else                : 
             var newAttrs: seq[(string, string)]
 
             if not isNil x.attrs:
@@ -358,7 +374,7 @@ func notesItemRows(notes: seq[NoteItem]; templates): XmlNode =
 
         else             : x
       
-    map result, templates.getTemplate"notes-page.note-item", repl
+    map result, templates.getTemplate"note-item", repl
     
 
 func `notes.html`(templates; notes: seq[NoteItem], suggestedTags: seq[HashTag]): XmlNode = 
@@ -405,9 +421,19 @@ func `profile.html`(templates): XmlNode =
 
   result = newHtmlDoc()
   map result, t, identityXml
-  # config file "for base_url, site_name"
-  #   export local DB
-  #   import DB
+
+func `info.html`(templates): XmlNode = 
+  let t = templates.getTemplate"info-page"
+
+  func identityXml(x): XmlNode = 
+    if x.isElement: 
+      case  x.tag
+      of    "use": templates.getTemplate x.attr"template"
+      else       : shallowCopy x
+    else         : x
+
+  result = newHtmlDoc()
+  map result, t, identityXml
 
 proc genWebsiteFiles(templateDir, libsDir, notesDir, mediaDir, saveDir: Path) = 
   let saveNoteDir  = saveDir / "notes"
@@ -479,8 +505,9 @@ proc genWebsiteFiles(templateDir, libsDir, notesDir, mediaDir, saveDir: Path) =
   writeHtml saveDir/"notes.html",    `notes.html`(templates, notes, suggestedTags)
   echo "+ profile.html"
   writeHtml saveDir/"profile.html", `profile.html`(templates)
-
-  # XXX copy frontend folder
+  # TODO info page -- tags, number of usages of tags, diagrams, ...
+  echo "+ info.html"
+  writeHtml saveDir/"info.html",    `info.html`(templates)
 
 const 
   appname = "Keeep"
@@ -501,6 +528,9 @@ const
 
 
 func toAppConfig(cfg: Config): AppConfig =
+  # config file "for base_url, site_name"
+  #   export local DB
+  #   import DB
 
   proc gsv(namespace, key: string): string = 
     getSectionValue(cfg, namespace, key)
@@ -513,6 +543,7 @@ func toAppConfig(cfg: Config): AppConfig =
     libsDir      : Path gsv("paths", "libs_dir"),
   )
 
+# TODO RSS
 
 when isMainModule:
   let params = commandLineParams()

@@ -36,6 +36,10 @@ function mapObjAcc(obj, fn) {
   return result
 }
 
+function last(arr) {
+  return arr[arr.length - 1]
+}
+
 // DOM Utils -------------------------------------------
 
 function q(sel) {
@@ -70,11 +74,57 @@ function insertAtCurrPos(el, text) {
 
 // DataBase -------------------------------------------
 
-// Actions --------------------------------------------
+// ----- low level
 
-function sortNotes() {
-  // TODO
+function clearDB() {
+  localStorage.clear()
 }
+
+function missingItemDB(key) {
+  return localStorage.getItem(key) === null
+}
+function existsItemDB(key) {
+  return !missingItemDB(key)
+}
+
+function getItemDB(key) {
+  return JSON.parse(localStorage.getItem(key))
+}
+function setItemDB(key, val) {
+  return localStorage.setItem(key, JSON.stringify(val))
+}
+
+function getAllItemsDB() {
+  let result = {}
+  for (let i = 0; i < localStorage.length; i++) {
+    let key = localStorage.key(i)
+    let value = localStorage.getItem(key)
+    result[key] = value
+  }
+  return key
+}
+
+// ----- domain level
+
+function getNoteReviewHistory(noteId) {
+  return getItemDB(noteId) ?? []
+}
+
+function addNoteReviewHistory(noteId, utime, score, minSecOffset) {
+  let snap = [utime, score]
+  let history = getNoteReviewHistory(noteId)
+
+  if ((0 < history.length) && (utime - last(history)[0] < minSecOffset))
+    history.pop()
+
+  history.push(snap)
+  console.log(history)
+  setItemDB(noteId, history)
+
+  return history
+}
+
+// Actions --------------------------------------------
 
 // Globals ---------------------------------------------
 
@@ -82,10 +132,11 @@ function sortNotes() {
 // history: [{time, score}] always sorted by time
 
 var allNotes = {}
+var currentNoteId = null
 
-const score_functions = {
+const scoreFunctions = {
   'passed': (now, created, history) => now - created,
-  'created': (now, created, history) => created,
+  'history_len': (now, created, history) => history.length,
 }
 
 const default_score_function = 'passed'
@@ -113,7 +164,6 @@ up.macro('[parse-unix-date]', el => {
   el.innerHTML = unixToFormattedDate(unixt)
 })
 
-
 up.compiler('#suggested-tags .btn', el => {
   let name = el.innerText.replace(' ', '')
   el.onclick = () => {
@@ -136,18 +186,40 @@ up.compiler('#tag-query-btn', el => {
   }
 })
 
+up.compiler('#import-db-btn', el => {
+  el.onclick = () => {
+    // TODO
+  }
+})
+
+up.compiler('#export-db-btn', el => {
+  el.onclick = () => {
+    // TODO
+  }
+})
+
+up.compiler('#clear-db-btn', el => {
+  el.onclick = () => {
+    let answer = confirm("Are you sure?")
+    if (answer) {
+      clearDB()
+    }
+  }
+})
+
 up.compiler('#score-functions-input', select => {
   function valueChanged() {
     let now = unixNow()
-    let fn = score_functions[select.value]
+    let fn = scoreFunctions[select.value]
+    let coeff = [+1, -1][+q`#inverse-result-checkbox`.checked]
     let acc = mapObjAcc(allNotes,
-      (id, note) => [id, fn(now, note.timestamp, [])]) // [id, score]
+      (id, note) => [id, coeff * fn(now, note.timestamp, getNoteReviewHistory(id))]) // [id, score]
 
     acc.sort((a, b) => b[1] - a[1]) // sort by score
 
     let sortedNotes = acc.map(([id, score]) => {
       let el = q(`[note-id=${id}]`)
-      el.querySelector('[score]').innerText = score
+      el.querySelector('[note-score]').innerText = score
       return el
     })
 
@@ -156,10 +228,28 @@ up.compiler('#score-functions-input', select => {
 
   select.replaceChildren(
     ...Object
-      .keys(score_functions)
+      .keys(scoreFunctions)
       .map(t => newElement("option", { value: t }, t))
   )
   select.value = default_score_function
   select.onchange = valueChanged
   valueChanged()
+})
+
+up.compiler('#inverse-result-checkbox', input => {
+  input.onchange = () => {
+    let t = input.checked
+    let select = q`#score-functions-input`
+    select.onchange()
+  }
+})
+
+up.compiler('.note-view', el => {
+  currentNoteId = el.getAttribute('note-id')
+})
+
+up.compiler('[name=note-review-btn]', input => {
+  input.onchange = () => {
+    addNoteReviewHistory(currentNoteId, unixNow(), parseInt(input.value), 10)
+  }
 })
