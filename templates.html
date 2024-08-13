@@ -67,6 +67,19 @@
               Review History
             </span>
           </h4>
+          <ul>
+            <!-- TODO to be filled at runtime -->
+            <template>
+              <li>
+                <span>
+                  <slot name="date" />
+                </span>
+                <span>
+                  <slot name="score" />
+                </span>
+              </li>
+            </template>
+          </ul>
         </div>
       </div>
     </main>
@@ -305,7 +318,7 @@
 
       <div class="container">
         <h1 class="text-center">
-          <i class="bi bi-tags"></i>
+          <i class="bi bi-info-square"></i>
           <span>Info</span>
         </h1>
         <div class="my-4">
@@ -348,7 +361,6 @@
     #<slot name="name"></slot>
   </span>
 </template>
-
 
 <template name="note-item">
   <tr class="note-item" :note-id="note-id">
