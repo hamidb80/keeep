@@ -211,7 +211,7 @@ up.compiler('#score-functions-input', select => {
   function valueChanged() {
     let now = unixNow()
     let fn = scoreFunctions[select.value]
-    let coeff = [+1, -1][+q`#inverse-result-checkbox`.checked]
+    let coeff = (q`#inverse-result-checkbox`.checked ? -1 : +1)
     let acc = mapObjAcc(allNotes,
       (id, note) => [id, coeff * fn(now, note.timestamp, getNoteReviewHistory(id))]) // [id, score]
 
@@ -252,4 +252,15 @@ up.compiler('[name=note-review-btn]', input => {
   input.onchange = () => {
     addNoteReviewHistory(currentNoteId, unixNow(), parseInt(input.value), 10)
   }
+})
+
+up.compiler('[path-breadcrumb]', el => {
+  let subs = el.innerHTML
+    .trim()
+    .split(/[\/\\]/g)
+    .map(p => newElement('li', { 'class': 'breadcrumb-item py-2' }, p))
+
+  last(subs).classList.add('text-primary')
+
+  el.replaceChildren(...subs)
 })

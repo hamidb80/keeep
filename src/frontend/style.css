@@ -6,6 +6,11 @@ article figure {
   text-align: center;
 }
 
+article figure img {
+  max-width: 100%;
+  max-height: 90vh;
+}
+
 .intro-font-logo {
   font-size: 9rem;
 }

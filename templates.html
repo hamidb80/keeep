@@ -17,25 +17,26 @@
       <div class="container">
 
         <div>
-          <div>
-            <ol class="breadcrumb">
-              <li class="breadcrumb-item"><a href="#">Home</a></li>
-              <li class="breadcrumb-item"><a href="#">Library</a></li>
-              <li class="breadcrumb-item active">Data</li>
-            </ol>
+          <ol class="breadcrumb" path-breadcrumb>
             <use template="note-path"></use>
-          </div>
-          <div>
-            <use template="note-id"></use>
-          </div>
-          <div>
-            <span parse-unix-date>
-              <use template="date"></use>
-            </span>
-          </div>
+          </ol>
         </div>
 
-        <div class="mt-4 card mx-auto shadow-sm rounded note-view" :note-id="note-id">
+        <div class="mt-3 card mx-auto shadow-sm rounded note-view" :note-id="note-id">
+          <div class="card-header py-2">
+            <div class="row">
+              <div class="col-md-6 col-12">
+                <i>ID: </i>
+                <code><use template="note-id"></use></code>
+              </div>
+              <div class="col-md-6 col-12 text-end">
+                <span parse-unix-date>
+                  <use template="date"></use>
+                </span>
+                <i class="bi bi-clock"></i>
+              </div>
+            </div>
+          </div>
           <div class="card-body">
             <use template="article"></use>
           </div>
@@ -95,7 +96,7 @@
             </span>
           </h2>
 
-          <form action="">
+          <div>
             <fieldset class="form-check form-switch">
               <input class="form-check-input" type="checkbox" id="inverse-result-checkbox" />
               <label class="form-check-label" for="flexSwitchCheckDefault">
@@ -106,16 +107,12 @@
 
             <select id="score-functions-input" class="form-select">
             </select>
-          </form>
 
-          <button class="btn btn-sm btn-outline-primary w-100 mt-1" id="remember-btn">
-            <i class="bi bi-repeat"></i>
-            <span>Remember</span>
-          </button>
-          <button class="btn btn-sm btn-outline-primary w-100 mt-1" id="random-btn">
-            <i class="bi bi-dice-5"></i>
-            <span>Random</span>
-          </button>
+            <button class="btn btn-sm btn-outline-primary w-100 mt-1" id="random-btn">
+              <i class="bi bi-dice-5"></i>
+              <span>Random</span>
+            </button>
+          </div>
         </div>
 
         <div class="my-5">
