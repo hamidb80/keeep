@@ -1,9 +1,5 @@
 // Utils ---------------------------------------------
 
-function flr(n) {
-  return Math.floor(n)
-}
-
 function p2(smth) {
   return String(smth).padStart(2, '0')
 }
@@ -19,13 +15,31 @@ function unixToFormattedDate(unixTimestamp) {
 }
 
 function unixNow() {
-  return flr(Date.now() / 1000)
+  return Math.floor(Date.now() / 1000)
 }
 
 function toUnixTimestamp(dateObject) {
-  return flr(dateObject.getTime() / 1000)
+  return Math.floor(dateObject.getTime() / 1000)
 }
 
+function mapObj(obj, fn) {
+  var result = {}
+  for (let key in obj) {
+    let val = obj[key]
+    result[key] = fn(val)
+  }
+  return result
+}
+
+function filterObj(obj, fn) {
+  var result = {}
+  for (let key in obj) {
+    let val = obj[key]
+    if (fn(key, val))
+      result[key] = val
+  }
+  return result
+}
 
 function mapObjAcc(obj, fn) {
   var result = []
@@ -81,7 +95,7 @@ function downloadFile(name, mime, content) {
   document.body.removeChild(a)
 }
 
-const genDebounce = (proc, delay) => {
+function genDebounce(proc, delay) {
   let timer
   return (...args) => {
     clearTimeout(timer)
@@ -89,33 +103,43 @@ const genDebounce = (proc, delay) => {
   }
 }
 
+function getQueryParams() {
+  return Object.fromEntries(
+    new URLSearchParams(window.location.search).entries())
+}
+
+function replaceQueryParams(qparams) {
+  let search = new URLSearchParams(qparams)
+  return window.history.replaceState(null, null, "?" + search.toString())
+}
+
 // DataBase -------------------------------------------
 
 // ----- low level
 
 function clearDB() {
-  localStorage.clear()
+  window.localStorage.clear()
 }
 
 function missingItemDB(key) {
-  return localStorage.getItem(key) === null
+  return window.localStorage.getItem(key) === null
 }
 function existsItemDB(key) {
   return !missingItemDB(key)
 }
 
 function getItemDB(key) {
-  return JSON.parse(localStorage.getItem(key))
+  return JSON.parse(window.localStorage.getItem(key))
 }
 function setItemDB(key, val) {
-  return localStorage.setItem(key, JSON.stringify(val))
+  return window.localStorage.setItem(key, JSON.stringify(val))
 }
 
 function getAllItemsDB() {
   let result = {}
-  for (let i = 0; i < localStorage.length; i++) {
-    let key = localStorage.key(i)
-    let valueStr = localStorage.getItem(key)
+  for (let i = 0; i < window.localStorage.length; i++) {
+    let key = window.localStorage.key(i)
+    let valueStr = window.localStorage.getItem(key)
     result[key] = JSON.parse(valueStr)
   }
   return result
@@ -148,14 +172,12 @@ function findNoteItemEl(id) {
 
 // Globals ---------------------------------------------
 
-// score  : "-1 0 +1"
-// history: [{time, score}] always sorted by time
+// upn : Url Param Name
 
-const debouceDelay = 400
+const debouceDelay = 600
 const scoreFunctions = {
   'passed time': (now, created, note, history) => now - created,
   'history len': (now, created, note, history) => history.length,
-  'name len': (now, created, note, history) => note.title.length,
 }
 
 
@@ -217,12 +239,22 @@ function searchNotes(text, tagQuery) {
   }
 }
 
-function searchNotesDom() {
-  searchNotes(
-    q`#title-search-input`.value.trim(),
-    q`#tag-query-input`.value.trim())
+function searchInputs() {
+  return {
+    i: q`#title-search-input`,
+    tq: q`#tag-query-input`
+  }
 }
 
+function searchInputsValues() {
+  return mapObj(searchInputs(), el => el.value.trim())
+}
+
+function searchNotesDom() {
+  let ivs = searchInputsValues()
+  searchNotes(ivs.i, ivs.tq)
+  replaceQueryParams(filterObj(ivs, (_, val) => val.length != ''))
+}
 
 // Unpoly Setup ----------------------------------------
 
@@ -275,6 +307,16 @@ up.compiler('#clear-db-btn', el => {
       clearDB()
     }
   }
+})
+
+up.compiler('#read-search-queries-from-url', () => {
+  let si = searchInputs()
+  let qp = getQueryParams()
+
+  si.i.value = qp.i ?? ''
+  si.tq.value = qp.tq ?? ''
+
+  searchNotesDom()
 })
 
 up.compiler('#score-functions-input', select => {
