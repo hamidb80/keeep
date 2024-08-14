@@ -135,7 +135,6 @@ function addNoteReviewHistory(noteId, utime, score, minSecOffset) {
     history.pop()
 
   history.push(snap)
-  console.log(history)
   setItemDB(noteId, history)
 
   return history
@@ -199,8 +198,6 @@ function searchNotes(text, tagQuery) {
       .filter(s => s.length != 0)
       .map(s => s.split(/\s+/g))
 
-  console.log(text, exprs)
-
   for (let id in allNotes) {
     let note = allNotes[id]
     let el = findNoteItemEl(id)
@@ -259,7 +256,6 @@ up.compiler('#suggested-tags .btn', el => {
 up.compiler('#import-db-btn', el => {
   el.onclick = () => {
     let target = newElement('input', { type: "file", accept: ".json" })
-    target.onchange = console.log
     target.click()
   }
 })
@@ -275,8 +271,7 @@ up.compiler('#export-db-btn', el => {
 
 up.compiler('#clear-db-btn', el => {
   el.onclick = () => {
-    let answer = confirm("Are you sure?")
-    if (answer) {
+    if (confirm("Are you sure?")) {
       clearDB()
     }
   }
