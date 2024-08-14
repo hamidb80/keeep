@@ -81,6 +81,14 @@ function downloadFile(name, mime, content) {
   document.body.removeChild(a)
 }
 
+const genDebounce = (proc, delay) => {
+  let timer
+  return (...args) => {
+    clearTimeout(timer)
+    timer = setTimeout(() => proc(...args), delay)
+  }
+}
+
 // DataBase -------------------------------------------
 
 // ----- low level
@@ -133,6 +141,10 @@ function addNoteReviewHistory(noteId, utime, score, minSecOffset) {
   return history
 }
 
+function findNoteItemEl(id) {
+  return q(`[note-id=${id}]`)
+}
+
 // Actions --------------------------------------------
 
 // Globals ---------------------------------------------
@@ -140,21 +152,79 @@ function addNoteReviewHistory(noteId, utime, score, minSecOffset) {
 // score  : "-1 0 +1"
 // history: [{time, score}] always sorted by time
 
-var allNotes = {}
-var currentNoteId = null
-
-
+const debouceDelay = 400
 const scoreFunctions = {
-  // TODO add note object
-  'passed time': (now, created, history) => now - created,
-  'history len': (now, created, history) => history.length,
+  'passed time': (now, created, note, history) => now - created,
+  'history len': (now, created, note, history) => history.length,
+  'name len': (now, created, note, history) => note.title.length,
 }
 
+
+var allNotes = {}
+var currentNoteId = null
 var current_score_function = 'passed time'
 
 
-// Unpoly Setup ----------------------------------------
+// Events ----------------------------------------------
 
+function tagQueryExprMatchesNote(tq, note) {
+  let tag = tq[0].substring(1)
+  let op = tq[1]
+  let val = tq[2]
+
+
+  if (!op || op == '?') {
+    for (let ht of note.hashtags)
+      if (ht.name == tag)
+        return true
+    return false
+  }
+
+  if (op == '!') {
+    for (let ht of note.hashtags)
+      if (ht.name == tag)
+        return false
+    return true
+  }
+}
+
+function searchNotes(text, tagQuery) {
+  let exprs =
+    tagQuery
+      .split(/[\n,]/g)
+      .map(s => s.trim())
+      .filter(s => s.length != 0)
+      .map(s => s.split(/\s+/g))
+
+  console.log(text, exprs)
+
+  for (let id in allNotes) {
+    let note = allNotes[id]
+    let el = findNoteItemEl(id)
+    var matches = true
+
+    if (matches && text.length != 0) {
+      matches = note.title.indexOf(text) !== -1
+    }
+    if (matches && exprs.length != 0) {
+      for (let expr of exprs) {
+        matches = tagQueryExprMatchesNote(expr, note)
+        if (!matches) break
+      }
+    }
+
+    el.style.display = matches ? "" : "none"
+  }
+}
+
+function searchNotesDom() {
+  searchNotes(
+    q`#title-search-input`.value.trim(),
+    q`#tag-query-input`.value.trim())
+}
+
+
+// Unpoly Setup ----------------------------------------
 
 up.macro('[smooth-link]', link => {
   setAttrs(link, {
@@ -179,21 +249,6 @@ up.compiler('#suggested-tags .btn', el => {
   let name = el.innerText.replace(' ', '')
   el.onclick = () => {
     insertAtCurrPos(q`#tag-query-input`, name)
-  }
-})
-
-up.compiler('#tag-query-btn', el => {
-  el.onclick = () => {
-    let exprs =
-      q`#tag-query-input`
-        .value
-        .split('\n')
-        .map(s => s.trim())
-        .filter(s => s.length != 0)
-        .map(s => s.split(/\s+/g))
-
-    // TODO
-    console.log(exprs)
   }
 })
 
@@ -230,12 +285,12 @@ up.compiler('#score-functions-input', select => {
     let fn = scoreFunctions[select.value]
     let coeff = (q`#inverse-result-checkbox`.checked ? -1 : +1)
     let acc = mapObjAcc(allNotes,
-      (id, note) => [id, coeff * fn(now, note.timestamp, getNoteReviewHistory(id))]) // [id, score]
+      (id, note) => [id, coeff * fn(now, note.timestamp, note, getNoteReviewHistory(id))]) // [id, score]
 
     acc.sort((a, b) => b[1] - a[1]) // sort by score
 
     let sortedNotes = acc.map(([id, score]) => {
-      let el = q(`[note-id=${id}]`)
+      let el = findNoteItemEl(id)
       el.querySelector('[note-score]').innerText = score
       return el
     })
@@ -280,4 +335,14 @@ up.compiler('[path-breadcrumb]', el => {
   last(subs).classList.add('text-primary')
 
   el.replaceChildren(...subs)
+})
+
+// '#tag-query-errors'
+
+up.compiler('#title-search-input', el => {
+  el.oninput = genDebounce(searchNotesDom, debouceDelay)
+})
+
+up.compiler('#tag-query-input', el => {
+  el.oninput = genDebounce(searchNotesDom, debouceDelay)
 })

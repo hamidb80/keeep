@@ -76,6 +76,9 @@ template iff(cond, iftrue, iffalse): untyped =
 
 # ---------------------------------------
 
+template popd(l: untyped): untyped = 
+  # pop and discard
+  setLen l, l.high
 
 func splitOnce(s; c: char): (string, string) = 
   let parts = s.split(c, 1)
@@ -192,6 +195,23 @@ func getTemplate(templates; name: string): XmlNode =
   if name in templates: templates[name]
   else: raisev "cannot find template: '" & name & "'"
 
+template last(smth): untyped = 
+  smth[^1]
+
+func removeTrainOfSpaces(s): string = 
+  var lastWasSpace = true
+  for ch in s: 
+    case ch
+    of Whitespace: 
+      if not lastWasSpace:
+        << ' '
+      lastWasSpace = true
+    else:
+      << ch
+      lastWasSpace = false
+
+  if result.last in Whitespace:
+    popd result
 
 func dfs(x; visit: proc(n: XmlNode): bool) {.effectsOf: visit.} = 
   ## DFS traversesal
@@ -218,7 +238,7 @@ func findTitle(x): string =
   
   case  titles.len 
   of 0: raisev "cannot find any header tag (h1 .. h6) in the note"
-  else: titles[0].innerText
+  else: titles[0].innerText.removeTrainOfSpaces
 
 func extractNoteElement(x): XmlNode = 
   if x.isElement:
