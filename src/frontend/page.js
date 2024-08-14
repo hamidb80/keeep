@@ -204,7 +204,7 @@ function tagQueryExprMatchesNote(tq, note) {
     return note.hashtags.some(ht => ht.name == tag && ht.value < val)
   if (op == '<=')
     return note.hashtags.some(ht => ht.name == tag && ht.value <= val)
-  if (op == '==')
+  if (op == '==' || op == '=')
     return note.hashtags.some(ht => ht.name == tag && ht.value == val)
   if (op == '!=')
     return note.hashtags.some(ht => ht.name == tag && ht.value != val)
