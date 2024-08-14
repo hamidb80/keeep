@@ -110,7 +110,7 @@ function getQueryParams() {
 
 function replaceQueryParams(qparams) {
   let search = new URLSearchParams(qparams)
-  return window.history.replaceState(null, null, "?" + search.toString())
+  return window.history.pushState({}, {}, "?" + search.toString())
 }
 
 // DataBase -------------------------------------------

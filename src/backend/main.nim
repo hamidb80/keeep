@@ -31,7 +31,8 @@ type
     hashtags* : seq[HashTag]
 
   AppConfig* = object
-    templatesFile*: Path
+    baseUrl*      : string
+    templateFile* : Path
     notesDir*     : Path
     buildDir*     : Path
     mediaDir*     : Path
@@ -359,7 +360,7 @@ func notesItemRows(notes: seq[NoteItem]; templates): XmlNode =
 
   proc ctx(i: int, n: NoteItem, key: string): string = 
     case key
-    of   "link"     : "/notes/" & n.id & ".html"
+    of   "link"     : "@/notes/" & n.id & ".html"
     of   "index"    : $i
     of   "timestamp": $n.timestamp 
     of   "note-id"  : n.id
@@ -452,12 +453,27 @@ func `info.html`(templates): XmlNode =
   result = newHtmlDoc()
   map result, t, identityXml
 
-proc genWebsiteFiles(templateDir, libsDir, notesDir, mediaDir, saveDir: Path) = 
+proc fixUrlsImpl(baseUrl: string, x: XmlNode) = 
+  if x.isElement:
+    if not isNil x.attrs:
+      for k, v in x.attrs:
+        if v.startsWith "@/":
+          x.attrs[k] = baseUrl & (v.substr 2)
+
+    for n in x:
+      fixUrlsImpl baseUrl, n
+
+func fixUrls(baseUrl: string, x: sink XmlNode): XmlNode = 
+  fixUrlsImpl baseUrl, x
+  x
+
+proc genWebsiteFiles(config: AppConfig) = 
+  let saveDir      = config.buildDir
   let saveNoteDir  = saveDir / "notes"
   let saveMediaDir = saveDir / "media"
   let saveLibsDir  = saveDir / "libs"
 
-  let templates    = loadHtmlTemplates templateDir
+  let templates    = loadHtmlTemplates config.templateFile
   
   var pathById: Table[string, Path]
   var notes   : seq[NoteItem]
@@ -469,10 +485,10 @@ proc genWebsiteFiles(templateDir, libsDir, notesDir, mediaDir, saveDir: Path) =
 
   block prepare:
     mkdir saveNoteDir
-    cpdir mediaDir, saveMediaDir
-    cpdir libsDir , saveLibsDir
+    cpdir config.mediaDir, saveMediaDir
+    cpdir config.libsDir , saveLibsDir
 
-  for p in discover notesDir:
+  for p in discover config.notesDir:
     echo "+ ", p
     
     var isTampered   = false
@@ -507,7 +523,7 @@ proc genWebsiteFiles(templateDir, libsDir, notesDir, mediaDir, saveDir: Path) =
       writefile $p, $Html doc
 
     let path = saveNoteDir/(id & ".html")
-    let html = renderNote(doc, note, templates)
+    let html = fixUrls(config.baseUrl, renderNote(doc, note, templates))
 
     add notes, note
     writeHtml path, html 
@@ -517,14 +533,14 @@ proc genWebsiteFiles(templateDir, libsDir, notesDir, mediaDir, saveDir: Path) =
   let suggestedTags = tagsCount.keys.toseq.mapit initHashTag(it, "")
 
   echo "+ index.html"
-  writeHtml saveDir/"index.html",    `index.html`(templates)
+  writeHtml saveDir/"index.html",    fixUrls(config.baseUrl, `index.html`(templates))
   echo "+ notes.html"
-  writeHtml saveDir/"notes.html",    `notes.html`(templates, notes, suggestedTags)
+  writeHtml saveDir/"notes.html",    fixUrls(config.baseUrl, `notes.html`(templates, notes, suggestedTags))
   echo "+ profile.html"
-  writeHtml saveDir/"profile.html", `profile.html`(templates)
+  writeHtml saveDir/"profile.html",  fixUrls(config.baseUrl, `profile.html`(templates))
   # TODO info page -- tags, number of usages of tags, diagrams, ...
   echo "+ info.html"
-  writeHtml saveDir/"info.html",    `info.html`(templates)
+  writeHtml saveDir/"info.html",     fixUrls(config.baseUrl, `info.html`(templates))
 
 const 
   appname = "Keeep"
@@ -553,17 +569,15 @@ func toAppConfig(cfg: Config): AppConfig =
     getSectionValue(cfg, namespace, key)
   
   AppConfig(
-    templatesFile: Path gsv("paths", "template_file"),
+    baseUrl      :      gsv("",      "base_url"),
+    templateFile : Path gsv("paths", "template_file"),
     notesDir     : Path gsv("paths", "notes_dir"),
     buildDir     : Path gsv("paths", "build_dir"),
     mediaDir     : Path gsv("paths", "media_dir"),
     libsDir      : Path gsv("paths", "libs_dir"),
   )
 
-# TODO tag with value
 # TODO RSS for all tags, and some specific tags stated in the config file
-# TODO base url
-# TODO find media files by name only
 
 when isMainModule:
   let params = commandLineParams()
@@ -582,11 +596,7 @@ when isMainModule:
         echo ">>>> copying libraries"
 
         echo ">>>> generating HTML files"
-        genWebsiteFiles cfg.templatesFile,
-                        cfg.libsDir,
-                        cfg.notesDir,
-                        cfg.mediaDir,
-                        cfg.buildDir
+        genWebsiteFiles cfg
     
       of   "new":
         echo "not implemented"
