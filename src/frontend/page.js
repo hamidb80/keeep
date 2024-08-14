@@ -176,6 +176,7 @@ function findNoteItemEl(id) {
 
 const debouceDelay = 600
 const scoreFunctions = {
+  'creation date': (now, created, note, history) => created,
   'passed time': (now, created, note, history) => now - created,
   'history len': (now, created, note, history) => history.length,
 }
@@ -183,7 +184,7 @@ const scoreFunctions = {
 
 var allNotes = {}
 var currentNoteId = null
-var current_score_function = 'passed time'
+var current_score_function = 'creation date'
 
 var lastTextInputValue = ''
 var lastTagQueryValue = ''

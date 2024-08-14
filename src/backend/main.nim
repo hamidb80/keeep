@@ -553,7 +553,6 @@ const
         init                  Creates config file
         new   [path to note]  Creates new note in desired directory
         build                 Generates static HTML/CSS/JS files in desired directory
-        hot   [path to note]  Hot reload; i.e. see changes live
 
     Usage:
         ./app  init
@@ -571,6 +570,7 @@ func toAppConfig(cfg: Config): AppConfig =
   
   AppConfig(
     baseUrl      :      gsv("",      "base_url"),
+
     templateFile : Path gsv("paths", "template_file"),
     notesDir     : Path gsv("paths", "notes_dir"),
     buildDir     : Path gsv("paths", "build_dir"),
@@ -599,12 +599,35 @@ when isMainModule:
         echo ">>>> generating HTML files"
         genWebsiteFiles cfg
     
-      of   "new":
-        echo "not implemented"
-      
-      of   "hot":
-        echo "not implemented"
+      of   "init":
+        echo "download necessary files from: ..."
+          
+      of "new":
+        let 
+          subPath        = params[1]
+          notePath       = cfg.notesDir / subPath
+          (dir, fname)   = splitPath notePath
+          finalNoteFname = 
+            if ($fname).endsWith ".html":  fname
+            else                   : Path $fname & ".html"
+          finalPath = dir / finalNoteFname
 
+        mkdir dir
+        writeFile $finalPath, dedent """
+          <note>
+            <article>
+              <!-- write HTML here -->
+              <!-- urls from root started with `@/` -->
+            </article>
+            
+            <tags>
+              <!-- #funs -->
+            </tags>
+          </note>
+        """
+
+        echo "new note created in: ", $finalPath
+          
       else:
         echo "Error: Invalid command: '", params[0], "'"
         echo help
