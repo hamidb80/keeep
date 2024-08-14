@@ -308,7 +308,8 @@ func wrap(hashtags: seq[HashTag], templates): XmlNode =
     let ctx = capture ht:
       proc (k: string): XmlNode = 
         case k
-        of "name": newText ht.name
+        of "name" : newText ht.name
+        of "value": newText ht.value
         # of "icon": newText ht.name
         else:      raisev "invalid property for hashtag render: " & k
     

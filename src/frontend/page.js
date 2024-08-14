@@ -185,6 +185,8 @@ var allNotes = {}
 var currentNoteId = null
 var current_score_function = 'passed time'
 
+var lastTextInputValue = ''
+var lastTagQueryValue = ''
 
 // Events ----------------------------------------------
 
@@ -252,8 +254,9 @@ function searchInputsValues() {
 
 function searchNotesDom() {
   let ivs = searchInputsValues()
+  lastTextInputValue = ivs.i
+  lastTagQueryValue = ivs.tq
   searchNotes(ivs.i, ivs.tq)
-  replaceQueryParams(filterObj(ivs, (_, val) => val.length != ''))
 }
 
 // Unpoly Setup ----------------------------------------
@@ -313,8 +316,8 @@ up.compiler('#read-search-queries-from-url', () => {
   let si = searchInputs()
   let qp = getQueryParams()
 
-  si.i.value = qp.i ?? ''
-  si.tq.value = qp.tq ?? ''
+  si.i.value = qp.i ?? lastTextInputValue
+  si.tq.value = qp.tq ?? lastTagQueryValue
 
   searchNotesDom()
 })
@@ -386,4 +389,13 @@ up.compiler('#title-search-input', el => {
 
 up.compiler('#tag-query-input', el => {
   el.oninput = genDebounce(searchNotesDom, debouceDelay)
+})
+
+up.compiler('#share-query-btn', el => {
+  el.onclick = () => {
+    replaceQueryParams(
+      filterObj(
+        searchInputsValues(),
+        (_, val) => val.length != ''))
+  }
 })

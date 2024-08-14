@@ -167,6 +167,13 @@
             <textarea class="form-control w-100" placeholder="#tag1 > 2&#10;#page  ?&#10;#OS  !" id="tag-query-input"
               style="min-height: 6rem;" />
 
+            <button class="btn btn-sm w-100 btn-outline-primary mt-1" id="share-query-btn">
+              <i class="bi bi-share"></i>
+              <span>
+                Share
+              </span>
+            </button>
+
           </search>
         </div>
 
@@ -380,6 +387,7 @@
   <span class="hashtag btn btn-sm btn-outline-primary">
     <!-- <i :class="bi {{}}"></i> -->
     #<slot name="name"></slot>
+    <slot name="value"></slot>
   </span>
 </template>
 
