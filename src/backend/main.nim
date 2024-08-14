@@ -564,6 +564,8 @@ func toAppConfig(cfg: Config): AppConfig =
   )
 
 # TODO RSS for all tags, and some specific tags stated in the config file
+# TODO base url
+# TODO find media files by name only
 
 when isMainModule:
   let params = commandLineParams()
