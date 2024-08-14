@@ -169,23 +169,26 @@ var current_score_function = 'passed time'
 
 function tagQueryExprMatchesNote(tq, note) {
   let tag = tq[0].substring(1)
-  let op = tq[1]
-  let val = tq[2]
+  let op = tq[1] ?? '?'
+  let val = tq[2] ?? ''
 
 
-  if (!op || op == '?') {
-    for (let ht of note.hashtags)
-      if (ht.name == tag)
-        return true
-    return false
-  }
-
-  if (op == '!') {
-    for (let ht of note.hashtags)
-      if (ht.name == tag)
-        return false
-    return true
-  }
+  if (op == '?')
+    return note.hashtags.some(ht => ht.name == tag)
+  if (op == '!')
+    return !note.hashtags.some(ht => ht.name == tag)
+  if (op == '<')
+    return note.hashtags.some(ht => ht.name == tag && ht.value < val)
+  if (op == '<=')
+    return note.hashtags.some(ht => ht.name == tag && ht.value <= val)
+  if (op == '==')
+    return note.hashtags.some(ht => ht.name == tag && ht.value == val)
+  if (op == '!=')
+    return note.hashtags.some(ht => ht.name == tag && ht.value != val)
+  if (op == '>=')
+    return note.hashtags.some(ht => ht.name == tag && ht.value >= val)
+  if (op == '>')
+    return note.hashtags.some(ht => ht.name == tag && ht.value > val)
 }
 
 function searchNotes(text, tagQuery) {
@@ -249,6 +252,7 @@ up.compiler('#suggested-tags .btn', el => {
   let name = el.innerText.replace(' ', '')
   el.onclick = () => {
     insertAtCurrPos(q`#tag-query-input`, name)
+    searchNotesDom()
   }
 })
 
