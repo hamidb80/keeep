@@ -67,9 +67,6 @@ template `<<`(smth): untyped {.dirty.} =
 template raisev(msg): untyped =
   raise newException(ValueError, msg)
 
-template impossible: untyped = 
-  raise newException(KeyError, "this region of code must be unreachable, if note, there are some wrong reasoning in the code")
-
 template iff(cond, iftrue, iffalse): untyped = 
   if cond: iftrue
   else   : iffalse
@@ -563,6 +560,7 @@ func toAppConfig(cfg: Config): AppConfig =
     libsDir      : Path gsv("paths", "libs_dir"),
   )
 
+# TODO tag with value
 # TODO RSS for all tags, and some specific tags stated in the config file
 # TODO base url
 # TODO find media files by name only
