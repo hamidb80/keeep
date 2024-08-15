@@ -106,7 +106,8 @@ proc mkfile(p; content: sink string) =
   writeFile $p, content
 
 
-func addExtIfMissing(p; ext: string): Path = 
+func addExt(p; ext: string): Path = 
+  ## adds file extention if missing
   if   p.str.endsWith ext:   p
   else               : Path $p & ext
 
@@ -604,18 +605,18 @@ when isMainModule:
       echo cfg[]
       
       case toLowerAscii params[0]
-      of   "build":
+      of "build":
         mkdir cfg.buildDir
         echo ">>>> copying libraries"
 
         echo ">>>> generating HTML files"
         genWebsiteFiles cfg
     
-      of   "init":
+      of "init":
         echo "download necessary files from: ..."
           
       of "new":
-        let notePath = addExtIfMissing(cfg.notesDir / params[1], ".html")
+        let notePath = addExt(cfg.notesDir / params[1], ".html")
 
         mkfile notePath, dedent """
           <note>
@@ -626,7 +627,8 @@ when isMainModule:
             </article>
             
             <tags>
-              <!-- #funs -->
+              <!-- #fun -->
+              <!-- #page: 2 -->
             </tags>
           </note>
         """
