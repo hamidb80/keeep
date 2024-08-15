@@ -71,6 +71,9 @@ template iff(cond, iftrue, iffalse): untyped =
   if cond: iftrue
   else   : iffalse
 
+template xmlEscape(s): untyped =
+  xmltree.escape s
+
 # ---------------------------------------
 
 template popd(l: untyped): untyped = 
@@ -148,7 +151,7 @@ func toStringImpl(result: var string; x) =
       << '>'
 
   of xnText:
-    << x.text
+    << xmlEscape x.text
 
   of xnComment: discard
   else: raisev "unsuppored xml kind: " & $x.kind
@@ -619,16 +622,16 @@ when isMainModule:
         let notePath = addExt(cfg.notesDir / params[1], ".html")
 
         mkfile notePath, dedent """
-          <note>
+          <note id="">
             <article>
-              <!-- write HTML here -->
-              <!-- absolute urls from root starts with `@/` -->
-              <!-- relative urls from root starts with `#./` -->
+              <!-- write HTML here
+                   absolute urls from root starts with `@/`
+                   relative urls from root starts with `#./` -->
             </article>
             
             <tags>
-              <!-- #fun -->
-              <!-- #page: 2 -->
+              <!-- #fun
+                   #page: 2 -->
             </tags>
           </note>
         """
