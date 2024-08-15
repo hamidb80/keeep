@@ -46,10 +46,11 @@ using
   templates: Table[string, XmlNode]
 
 const 
-  htmlPrefix  = "<!DOCTYPE html>"
+  htmlPrefix = "<!DOCTYPE html>"
   configPath = "./config.ini"
-  appname = "Keeep"
-  help    = dedent fmt"""
+  appname    = "Keeep"
+  watchDelay = 100
+  help       = dedent fmt"""
 
     ..:: {appname} ::..
 
@@ -631,7 +632,7 @@ when isMainModule:
           if lastModif < t:
              lastModif = t
              genWebsite templates, config, @[fpath], true
-          sleep 100
+          sleep watchDelay
 
       of "init":
         echo "download necessary files from: ..."
