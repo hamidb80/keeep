@@ -76,7 +76,7 @@ template xmlEscape(s): untyped =
 
 # ---------------------------------------
 
-template popd(l: untyped): untyped = 
+template popd(l): untyped = 
   # pop and discard
   setLen l, l.high
 
@@ -100,13 +100,16 @@ func `/`(a: Path, b: string): Path =
 func `%`(p): JsonNode = 
   % str p
 
+proc rmdir(p) = 
+  removeDir str p
+
 proc mkdir(p) = 
-  discard existsOrCreateDir $p
+  discard existsOrCreateDir str p
 
 proc mkfile(p; content: sink string) = 
   let (dir, _) = splitPath p
   mkdir dir
-  writeFile $p, content
+  writeFile str p, content
 
 
 func addExt(p; ext: string): Path = 
@@ -455,7 +458,7 @@ func `profile.html`(templates): XmlNode =
   result = newHtmlDoc()
   map result, t, identityXml
 
-func `info.html`(templates): XmlNode = 
+func `info.html`(templates; tagsCount: CountTable[string]): XmlNode = 
   let t = templates.getTemplate"info-page"
 
   func identityXml(x): XmlNode = 
@@ -558,7 +561,7 @@ proc genWebsiteFiles(config: AppConfig) =
   writeHtml saveDir/"profile.html",  fixUrls(Path"", config.baseUrl, `profile.html`(templates))
   # TODO info page -- tags, number of usages of tags, diagrams, ...
   echo "+ info.html"
-  writeHtml saveDir/"info.html",     fixUrls(Path"", config.baseUrl, `info.html`(templates))
+  writeHtml saveDir/"info.html",     fixUrls(Path"", config.baseUrl, `info.html`(templates, tagsCount))
 
 const 
   appname = "Keeep"
@@ -595,6 +598,8 @@ func toAppConfig(cfg: Config): AppConfig =
   )
 
 # TODO RSS for all tags, and some specific tags stated in the config file
+# TODO name mangle config.libsDir
+# TODO only build one note
 
 when isMainModule:
   let params = commandLineParams()
@@ -604,38 +609,31 @@ when isMainModule:
   else:
 
     if fileExists configPath:
-      let cfg = toAppConfig loadConfig configPath
-      echo cfg[]
+      let config = toAppConfig loadConfig configPath
+      echo config[]
       
       case toLowerAscii params[0]
-      of "build":
-        mkdir cfg.buildDir
-        echo ">>>> copying libraries"
+      of "clean":
+        echo ">>>> removing ", config.buildDir
+        rmdir config.buildDir
 
+      of "build":
+        echo ">>>> creating ", config.buildDir
+        mkdir                  config.buildDir
+        
+        echo ">>>> copying libraries"
         echo ">>>> generating HTML files"
-        genWebsiteFiles cfg
-    
+        genWebsiteFiles config
+
+      of "build1":
+        echo "not implemented"
+
       of "init":
         echo "download necessary files from: ..."
           
       of "new":
-        let notePath = addExt(cfg.notesDir / params[1], ".html")
-
-        mkfile notePath, dedent """
-          <note id="">
-            <article>
-              <!-- write HTML here
-                   absolute urls from root starts with `@/`
-                   relative urls from root starts with `#./` -->
-            </article>
-            
-            <tags>
-              <!-- #fun
-                   #page: 2 -->
-            </tags>
-          </note>
-        """
-
+        let    notePath = addExt(config.notesDir / params[1], ".html")
+        mkfile notePath, readfile "/frontend/blueprint.html"
         echo "new note created in: ", $notePath
           
       else:
