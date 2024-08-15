@@ -1,11 +1,11 @@
 import std/[
-  xmltree, 
+  xmltree,  json,
   strutils, strformat, sequtils,
   times,
   tables, strtabs,
   os, paths, streams,
   algorithm, oids,
-  json,
+  times,
   sugar]
 
 import std/parsecfg
@@ -57,6 +57,7 @@ const
         init                  Creates config file
         new   [path to note]  Creates new note in desired directory
         build                 Generates static HTML/CSS/JS files in desired directory
+        watch                 watch chanes for a single note
 
     Usage:
         ./app  init
@@ -218,12 +219,12 @@ proc loadHtmlTemplates(p): Table[string, XmlNode] =
       of "template":
         result[x.attr"name"] = x 
       else: 
-        raisev "only <template> is allowed in top level"
+        raisev "only <template> is allowed in top level of templates file"
 
 
 func getTemplate(templates; name: string): XmlNode = 
   if name in templates: templates[name]
-  else: raisev "cannot find template: '" & name & "'"
+  else: raisev "cannot find the template: '" & name & "'"
 
 template last(smth): untyped = 
   smth[^1]
@@ -499,7 +500,7 @@ func fixUrls(relPath: Path, baseUrl: string, x: sink XmlNode): XmlNode =
   fixUrlsImpl relPath, baseUrl, x
   x
 
-proc genWebsite(templates; config: AppConfig, notesPaths: seq[Path]) =
+proc genWebsite(templates; config: AppConfig, notesPaths: seq[Path], demo: bool) =
   let 
     saveDir      = config.buildDir
     saveNoteDir  = saveDir / "notes"
@@ -511,7 +512,7 @@ proc genWebsite(templates; config: AppConfig, notesPaths: seq[Path]) =
     pathById  = initTable[string, Path]()
     tagsCount = initCountTable[string]()
   
-  block prepare:
+  if not demo: # prepare
     mkdir saveNoteDir
     cpdir config.notesDir, saveAssetDir
     cpdir config.libsDir , saveLibsDir
@@ -560,7 +561,7 @@ proc genWebsite(templates; config: AppConfig, notesPaths: seq[Path]) =
     add notes, note
     writeHtml path, html 
 
-  block otherPages:
+  if not demo: # otherPages
     sort tagsCount
     let suggestedTags = tagsCount.keys.toseq.mapit initHashTag(it, "")
 
@@ -576,10 +577,6 @@ proc genWebsite(templates; config: AppConfig, notesPaths: seq[Path]) =
 
 
 func toAppConfig(cfg: Config): AppConfig =
-  # config file "for base_url, site_name"
-  #   export local DB
-  #   import DB
-
   proc gsv(namespace, key: string): string = 
     getSectionValue(cfg, namespace, key)
   
@@ -595,7 +592,6 @@ func toAppConfig(cfg: Config): AppConfig =
 # TODO RSS for all tags, and some specific tags stated in the config file
 # TODO name mangle config.libsDir
 # TODO download deps
-# TODO single build
 
 when isMainModule:
   let params = commandLineParams()
@@ -621,10 +617,21 @@ when isMainModule:
         echo ">>>> generating HTML files"
         
         let        templates  =       loadHtmlTemplates config.templateFile
-        genWebsite templates, config, findFilesWithExt(config.notesDir, ".html")
+        genWebsite templates, config, findFilesWithExt(config.notesDir, ".html"), false
 
-      of "build1":
-        echo "not implemented"
+      of "watch":
+        echo ">>>> generating HTML file of desired note"
+        let        
+          templates  = loadHtmlTemplates config.templateFile
+          fpath      = Path params[1]
+
+        var lastModif: Time
+        while true:
+          let t = getLastModificationTime str fpath
+          if lastModif < t:
+             lastModif = t
+             genWebsite templates, config, @[fpath], true
+          sleep 100
 
       of "init":
         echo "download necessary files from: ..."
