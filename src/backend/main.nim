@@ -30,12 +30,11 @@ type
     path*     : Path
     hashtags* : seq[HashTag]
 
-  AppConfig* = object
+  AppConfig* = ref object
     baseUrl*      : string
     templateFile* : Path
     notesDir*     : Path
     buildDir*     : Path
-    mediaDir*     : Path
     libsDir*      : Path
     
 
@@ -100,6 +99,17 @@ func `%`(p): JsonNode =
 
 proc mkdir(p) = 
   discard existsOrCreateDir $p
+
+proc mkfile(p; content: sink string) = 
+  let (dir, _) = splitPath p
+  mkdir dir
+  writeFile $p, content
+
+
+func addExtIfMissing(p; ext: string): Path = 
+  if   p.str.endsWith ext:   p
+  else               : Path $p & ext
+
 
 proc cpdir(src, dest: Path) = 
   copyDir $src, $dest
@@ -454,25 +464,28 @@ func `info.html`(templates): XmlNode =
   result = newHtmlDoc()
   map result, t, identityXml
 
-proc fixUrlsImpl(baseUrl: string, x: XmlNode) = 
+proc fixUrlsImpl(relPath: Path, baseUrl: string, x: XmlNode) = 
   if x.isElement:
     if not isNil x.attrs:
       for k, v in x.attrs:
-        if v.startsWith "@/":
-          x.attrs[k] = baseUrl & (v.substr 2)
+        x.attrs[k] =
+          if   v.startsWith "@/" : baseUrl &                      (v.substr 2)
+          elif v.startsWith "#./": baseUrl / "assets" / $relPath / (v.substr 3)
+          else                   : continue
+
 
     for n in x:
-      fixUrlsImpl baseUrl, n
+      fixUrlsImpl relPath, baseUrl, n
 
-func fixUrls(baseUrl: string, x: sink XmlNode): XmlNode = 
-  fixUrlsImpl baseUrl, x
+func fixUrls(relPath: Path, baseUrl: string, x: sink XmlNode): XmlNode = 
+  fixUrlsImpl relPath, baseUrl, x
   x
 
 proc genWebsiteFiles(config: AppConfig) = 
   let saveDir      = config.buildDir
   let saveNoteDir  = saveDir / "notes"
-  let saveMediaDir = saveDir / "media"
   let saveLibsDir  = saveDir / "libs"
+  let saveAssetDir = saveDir / "assets"
 
   let templates    = loadHtmlTemplates config.templateFile
   
@@ -486,7 +499,7 @@ proc genWebsiteFiles(config: AppConfig) =
 
   block prepare:
     mkdir saveNoteDir
-    cpdir config.mediaDir, saveMediaDir
+    cpdir config.notesDir, saveAssetDir
     cpdir config.libsDir , saveLibsDir
 
   for p in discover config.notesDir:
@@ -524,7 +537,7 @@ proc genWebsiteFiles(config: AppConfig) =
       writefile $p, $Html doc
 
     let path = saveNoteDir/(id & ".html")
-    let html = fixUrls(config.baseUrl, renderNote(doc, note, templates))
+    let html = fixUrls(relativePath(parentDir p, config.notesDir), config.baseUrl, renderNote(doc, note, templates))
 
     add notes, note
     writeHtml path, html 
@@ -534,14 +547,14 @@ proc genWebsiteFiles(config: AppConfig) =
   let suggestedTags = tagsCount.keys.toseq.mapit initHashTag(it, "")
 
   echo "+ index.html"
-  writeHtml saveDir/"index.html",    fixUrls(config.baseUrl, `index.html`(templates))
+  writeHtml saveDir/"index.html",    fixUrls(Path"", config.baseUrl, `index.html`(templates))
   echo "+ notes.html"
-  writeHtml saveDir/"notes.html",    fixUrls(config.baseUrl, `notes.html`(templates, notes, suggestedTags))
+  writeHtml saveDir/"notes.html",    fixUrls(Path"", config.baseUrl, `notes.html`(templates, notes, suggestedTags))
   echo "+ profile.html"
-  writeHtml saveDir/"profile.html",  fixUrls(config.baseUrl, `profile.html`(templates))
+  writeHtml saveDir/"profile.html",  fixUrls(Path"", config.baseUrl, `profile.html`(templates))
   # TODO info page -- tags, number of usages of tags, diagrams, ...
   echo "+ info.html"
-  writeHtml saveDir/"info.html",     fixUrls(config.baseUrl, `info.html`(templates))
+  writeHtml saveDir/"info.html",     fixUrls(Path"", config.baseUrl, `info.html`(templates))
 
 const 
   appname = "Keeep"
@@ -574,7 +587,6 @@ func toAppConfig(cfg: Config): AppConfig =
     templateFile : Path gsv("paths", "template_file"),
     notesDir     : Path gsv("paths", "notes_dir"),
     buildDir     : Path gsv("paths", "build_dir"),
-    mediaDir     : Path gsv("paths", "media_dir"),
     libsDir      : Path gsv("paths", "libs_dir"),
   )
 
@@ -589,7 +601,7 @@ when isMainModule:
 
     if fileExists configPath:
       let cfg = toAppConfig loadConfig configPath
-      echo cfg
+      echo cfg[]
       
       case toLowerAscii params[0]
       of   "build":
@@ -603,21 +615,14 @@ when isMainModule:
         echo "download necessary files from: ..."
           
       of "new":
-        let 
-          subPath        = params[1]
-          notePath       = cfg.notesDir / subPath
-          (dir, fname)   = splitPath notePath
-          finalNoteFname = 
-            if ($fname).endsWith ".html":  fname
-            else                   : Path $fname & ".html"
-          finalPath = dir / finalNoteFname
+        let notePath = addExtIfMissing(cfg.notesDir / params[1], ".html")
 
-        mkdir dir
-        writeFile $finalPath, dedent """
+        mkfile notePath, dedent """
           <note>
             <article>
               <!-- write HTML here -->
-              <!-- urls from root started with `@/` -->
+              <!-- absolute urls from root starts with `@/` -->
+              <!-- relative urls from root starts with `#./` -->
             </article>
             
             <tags>
@@ -626,7 +631,7 @@ when isMainModule:
           </note>
         """
 
-        echo "new note created in: ", $finalPath
+        echo "new note created in: ", $notePath
           
       else:
         echo "Error: Invalid command: '", params[0], "'"
