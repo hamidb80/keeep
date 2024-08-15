@@ -32,6 +32,7 @@ type
 
   AppConfig* = ref object
     baseUrl*      : string
+    blueprintFile*: Path
     templateFile* : Path
     notesDir*     : Path
     buildDir*     : Path
@@ -490,7 +491,7 @@ proc fixUrlsImpl(relPath: Path, baseUrl: string, x: XmlNode) =
       for k, v in x.attrs:
         x.attrs[k] =
           if   v.startsWith "@/" : baseUrl &                       (v.substr 2)
-          elif v.startsWith "./" : baseUrl / "assets" / $relPath / (v.substr 3)
+          elif v.startsWith "./" : baseUrl / "assets" / $relPath / (v.substr 2)
           else                   : continue
 
 
@@ -582,8 +583,9 @@ func toAppConfig(cfg: Config): AppConfig =
     getSectionValue(cfg, namespace, key)
   
   AppConfig(
-    baseUrl      :      gsv("",      "base_url"),
+    baseUrl      :      gsv("website", "base_url"),
 
+    blueprintFile: Path gsv("paths", "blueprint_file"),
     templateFile : Path gsv("paths", "template_file"),
     notesDir     : Path gsv("paths", "notes_dir"),
     buildDir     : Path gsv("paths", "build_dir"),
@@ -602,7 +604,7 @@ when isMainModule:
   else:
 
     if fileExists configPath:
-      let config = toAppConfig loadConfig configPath
+      let  config = toAppConfig loadConfig configPath
       echo config[]
       
       case toLowerAscii params[0]
@@ -639,7 +641,7 @@ when isMainModule:
           
       of "new":
         let    notePath = addExt(config.notesDir / params[1], ".html")
-        mkfile notePath, readfile "/frontend/blueprint.html"
+        mkfile notePath,  readfile    $config.blueprintFile
         echo "new note created in: ", $notePath
           
       else:
