@@ -476,8 +476,8 @@ proc fixUrlsImpl(relPath: Path, baseUrl: string, x: XmlNode) =
     if not isNil x.attrs:
       for k, v in x.attrs:
         x.attrs[k] =
-          if   v.startsWith "@/" : baseUrl &                      (v.substr 2)
-          elif v.startsWith "#./": baseUrl / "assets" / $relPath / (v.substr 3)
+          if   v.startsWith "@/" : baseUrl &                       (v.substr 2)
+          elif v.startsWith "./" : baseUrl / "assets" / $relPath / (v.substr 3)
           else                   : continue
 
 
@@ -509,7 +509,9 @@ proc genWebsiteFiles(config: AppConfig) =
     cpdir config.notesDir, saveAssetDir
     cpdir config.libsDir , saveLibsDir
 
-  for p in discover config.notesDir:
+  let notesPaths = discover config.notesDir
+
+  for p in notesPaths:
     echo "+ ", p
     
     var isTampered   = false
@@ -599,7 +601,8 @@ func toAppConfig(cfg: Config): AppConfig =
 
 # TODO RSS for all tags, and some specific tags stated in the config file
 # TODO name mangle config.libsDir
-# TODO only build one note
+# TODO download deps
+# TODO single build
 
 when isMainModule:
   let params = commandLineParams()

@@ -11,6 +11,3 @@ bin           = @["keeep"]
 # Dependencies
 
 requires "nim >= 2.0.0"
-
-task gen, "":
-  exec "nim r src/backend/main.nim"
