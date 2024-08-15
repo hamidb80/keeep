@@ -48,6 +48,21 @@ using
 const 
   htmlPrefix  = "<!DOCTYPE html>"
   configPath = "./config.ini"
+  appname = "Keeep"
+  help    = dedent fmt"""
+
+    ..:: {appname} ::..
+
+    Commands:
+        init                  Creates config file
+        new   [path to note]  Creates new note in desired directory
+        build                 Generates static HTML/CSS/JS files in desired directory
+
+    Usage:
+        ./app  init
+
+  """
+
   
 
 func initHashTag(name, val: string): HashTag = 
@@ -190,9 +205,9 @@ func parseHashTags(s): seq[HashTag] =
       <<   parseHashTag  strip l
 
 
-proc discover(dir: Path): seq[Path] = 
+proc findFilesWithExt(dir: Path, ext: string): seq[Path] = 
   for f in walkDirRec $dir:
-    if f.endsWith ".html":
+    if f.endsWith ext:
       << Path f
 
 proc loadHtmlTemplates(p): Table[string, XmlNode] = 
@@ -427,10 +442,6 @@ func `notes.html`(templates; notes: seq[NoteItem], suggestedTags: seq[HashTag]):
 
   result = newHtmlDoc()
   map result, t, identityXml
-  # notes table:
-  #   different formuals forr scoring
-  #   searchable
-  #   show name, tag, time, score
 
 func `index.html`(templates): XmlNode = 
   let t = templates.getTemplate"index-page"
@@ -488,55 +499,56 @@ func fixUrls(relPath: Path, baseUrl: string, x: sink XmlNode): XmlNode =
   fixUrlsImpl relPath, baseUrl, x
   x
 
-proc genWebsiteFiles(config: AppConfig) = 
-  let saveDir      = config.buildDir
-  let saveNoteDir  = saveDir / "notes"
-  let saveLibsDir  = saveDir / "libs"
-  let saveAssetDir = saveDir / "assets"
+proc genWebsite(templates; config: AppConfig, notesPaths: seq[Path]) =
+  let 
+    saveDir      = config.buildDir
+    saveNoteDir  = saveDir / "notes"
+    saveLibsDir  = saveDir / "libs"
+    saveAssetDir = saveDir / "assets"
 
-  let templates    = loadHtmlTemplates config.templateFile
+  var 
+    notes     : seq[NoteItem]
+    pathById  = initTable[string, Path]()
+    tagsCount = initCountTable[string]()
   
-  var pathById: Table[string, Path]
-  var notes   : seq[NoteItem]
-  var tagsCount = initCountTable[string]()
-  
-  template tamper(stmt): untyped = 
-    isTampered = true
-    stmt
-
   block prepare:
     mkdir saveNoteDir
     cpdir config.notesDir, saveAssetDir
     cpdir config.libsDir , saveLibsDir
 
-  let notesPaths = discover config.notesDir
-
   for p in notesPaths:
     echo "+ ", p
-    
+
     var isTampered   = false
-    let doc          = extractNoteElement parseHtmlFromFile p
-    let docId        = doc.attr"id"
-    let docTimestamp = doc.attr"timestamp"
-    let
+    template tamper(stmt): untyped = 
+      isTampered = true
+      stmt
+    
+    let 
+      doc          = extractNoteElement parseHtmlFromFile p
+      docId        = doc.attr"id"
+      docTimestamp = doc.attr"timestamp"
       id = 
-        if    docid == "": tamper(p.str.splitFile.name & '-' & $genOid())
+        if    docid == "": tamper (p.str.splitFile.name & '-' & $genOid())
         else: docid
       timestamp = 
         if docTimestamp == "": tamper toUnix toTime now()
         else                 : parseint docTimestamp
-
-    if id in pathById:
-      raisev "Error: Duplicated id! ids of " & $pathById[id] & " and " & $p & "are the same"
-    else:
-      pathById[id] = p
-
-    let note = NoteItem(
+      note = NoteItem(
         id       : id, 
         timestamp: timestamp, 
         path     : p,
         title    : findTitle doc, 
         hashtags : noteTags  doc)
+      path = saveNoteDir / (id & ".html")
+      html = fixUrls( relativePath(parentDir p, config.notesDir),
+                      config.baseUrl, 
+                      renderNote(doc, note, templates))
+
+    if id in pathById:
+      raisev "Error: Duplicated id! ids of " & $pathById[id] & " and " & $p & "are the same"
+    else:
+      pathById[id] = p
 
     for t in note.hashtags:
       inc tagsCount, t.name
@@ -545,41 +557,22 @@ proc genWebsiteFiles(config: AppConfig) =
       doc.attrs = xa {"id": id, "timestamp": $timestamp}
       writefile $p, $Html doc
 
-    let path = saveNoteDir/(id & ".html")
-    let html = fixUrls(relativePath(parentDir p, config.notesDir), config.baseUrl, renderNote(doc, note, templates))
-
     add notes, note
     writeHtml path, html 
 
-  sort tagsCount
+  block otherPages:
+    sort tagsCount
+    let suggestedTags = tagsCount.keys.toseq.mapit initHashTag(it, "")
 
-  let suggestedTags = tagsCount.keys.toseq.mapit initHashTag(it, "")
-
-  echo "+ index.html"
-  writeHtml saveDir/"index.html",    fixUrls(Path"", config.baseUrl, `index.html`(templates))
-  echo "+ notes.html"
-  writeHtml saveDir/"notes.html",    fixUrls(Path"", config.baseUrl, `notes.html`(templates, notes, suggestedTags))
-  echo "+ profile.html"
-  writeHtml saveDir/"profile.html",  fixUrls(Path"", config.baseUrl, `profile.html`(templates))
-  # TODO info page -- tags, number of usages of tags, diagrams, ...
-  echo "+ info.html"
-  writeHtml saveDir/"info.html",     fixUrls(Path"", config.baseUrl, `info.html`(templates, tagsCount))
-
-const 
-  appname = "Keeep"
-  help    = dedent fmt"""
-
-    ..:: {appname} ::..
-
-    Commands:
-        init                  Creates config file
-        new   [path to note]  Creates new note in desired directory
-        build                 Generates static HTML/CSS/JS files in desired directory
-
-    Usage:
-        ./app  init
-
-  """
+    echo "+ index.html"
+    writeHtml saveDir/"index.html",    fixUrls(Path"", config.baseUrl, `index.html`(templates))
+    echo "+ notes.html"
+    writeHtml saveDir/"notes.html",    fixUrls(Path"", config.baseUrl, `notes.html`(templates, notes, suggestedTags))
+    echo "+ profile.html"
+    writeHtml saveDir/"profile.html",  fixUrls(Path"", config.baseUrl, `profile.html`(templates))
+    # TODO info page -- tags, number of usages of tags, diagrams, ...
+    echo "+ info.html"
+    writeHtml saveDir/"info.html",     fixUrls(Path"", config.baseUrl, `info.html`(templates, tagsCount))
 
 
 func toAppConfig(cfg: Config): AppConfig =
@@ -626,7 +619,9 @@ when isMainModule:
         
         echo ">>>> copying libraries"
         echo ">>>> generating HTML files"
-        genWebsiteFiles config
+        
+        let        templates  =       loadHtmlTemplates config.templateFile
+        genWebsite templates, config, findFilesWithExt(config.notesDir, ".html")
 
       of "build1":
         echo "not implemented"
