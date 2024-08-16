@@ -122,7 +122,7 @@ func `%`(p): JsonNode =
 
 
 proc rmdir(p) = 
-  removeDir str p, true
+  removeDir str p, false
 
 proc mkdir(p) = 
   discard existsOrCreateDir str p
