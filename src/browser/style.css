@@ -23,7 +23,8 @@ article figure img {
   font-style: normal;
 }
 
-[hidden] {
+[hidden],
+template {
   display: none;
 }
 

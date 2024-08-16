@@ -44,9 +44,12 @@ using
   p: Path
   s: string
   n: NoteItem
+  u: UnixTimestamp
   templates: Table[string, XmlNode]
+  config: AppConfig
 
 const 
+  notFound   = -1
   htmlPrefix = "<!DOCTYPE html>"
   configPath = "./config.ini"
   appname    = "Keeep"
@@ -119,7 +122,7 @@ func `%`(p): JsonNode =
   % str p
 
 proc rmdir(p) = 
-  removeDir str p
+  removeDir str p, true
 
 proc mkdir(p) = 
   discard existsOrCreateDir str p
@@ -485,24 +488,47 @@ func `info.html`(templates; tagsCount: CountTable[string]): XmlNode =
   result = newHtmlDoc()
   map result, t, identityXml
 
-proc fixUrlsImpl(relPath: Path, baseUrl: string, x: XmlNode) = 
+proc fixUrlsImpl(relPath: Path, baseUrl: string, libNameMap: TableRef[Path, Path], x: XmlNode) = 
   if x.isElement:
     if not isNil x.attrs:
       for k, v in x.attrs:
-        x.attrs[k] =
-          if   v.startsWith "@/" : baseUrl &                       (v.substr 2)
-          elif v.startsWith "./" : baseUrl / "assets" / $relPath / (v.substr 2)
-          else                   : continue
+        # match `@/` `./` `!/` patterns
+        if 2 <= v.len and v[1] == '/':
+          x.attrs[k] =
+            case v[0]
+            of '@' : baseUrl &                       (v.substr 2)
+            of '.' : baseUrl / "assets" / $relPath / (v.substr 2)
+            of '!' : baseUrl / "libs"   / $libNameMap[Path extractFilename (v.substr 2)]
+            else    : continue
 
 
     for n in x:
-      fixUrlsImpl relPath, baseUrl, n
+      fixUrlsImpl relPath, baseUrl, libNameMap, n
 
-func fixUrls(relPath: Path, baseUrl: string, x: sink XmlNode): XmlNode = 
-  fixUrlsImpl relPath, baseUrl, x
+func fixUrls(relPath: Path, baseUrl: string, libNameMap: TableRef[Path, Path], x: sink XmlNode): XmlNode = 
+  fixUrlsImpl relPath, baseUrl, libNameMap, x
   x
 
-proc genWebsite(templates; config: AppConfig, notesPaths: seq[Path], demo: bool) =
+const timestampSep = "--t"
+
+func addTimestamp(p, u): Path = 
+  let (dir, name, ext) = splitFile p
+  dir / ($name & timestampSep & $u & ext)
+
+func removeTimestamp(p): Path = 
+  let (dir, name, ext) = splitFile p
+  let i = name.str.rfind timestampSep
+  
+  case i
+  of notFound:
+    raisev "the file path '" & $p & "' does not have timestamp separator"
+  else:
+    dir / (name.str.substr(0, i-1) & ext)
+
+proc unow: UnixTimestamp = 
+  toUnix toTime now()
+
+proc genWebsite(templates, config; notesPaths: seq[Path], demo: bool) =
   let 
     saveDir      = config.buildDir
     saveNoteDir  = saveDir / "notes"
@@ -513,14 +539,34 @@ proc genWebsite(templates; config: AppConfig, notesPaths: seq[Path], demo: bool)
     notes     : seq[NoteItem]
     pathById  = initTable[string, Path]()
     tagsCount = initCountTable[string]()
+    libNameMap= newTable[Path, Path]()
+
   
   if not demo: # prepare
+    rmdir saveLibsDir
     mkdir saveNoteDir
     cpdir config.notesDir, saveAssetDir
     cpdir config.libsDir , saveLibsDir
 
+    # name mangeling
+    let now = unow()
+    for f in walkDirRec str saveLibsDir:
+      let p = relativePath(Path f, saveLibsDir)
+      let np = addTimestamp(p, now)
+      libNameMap[p] = np
+      moveFile f, (parentDir f) / $np
+
+  else:
+    # use last name mangeling
+    for f in walkDirRec str saveLibsDir:
+      let p = relativePath(Path f, saveLibsDir)
+      libNameMap[removeTimestamp p] = p
+  
+  # debugecho libNameMap
+
   for p in notesPaths:
-    echo "+ ", p
+    if not demo:
+      echo "+ ", p
 
     var isTampered   = false
     template tamper(stmt): untyped = 
@@ -535,7 +581,7 @@ proc genWebsite(templates; config: AppConfig, notesPaths: seq[Path], demo: bool)
         if    docid == "": tamper (p.str.splitFile.name & '-' & $genOid())
         else: docid
       timestamp = 
-        if docTimestamp == "": tamper toUnix toTime now()
+        if docTimestamp == "": tamper unow()
         else                 : parseint docTimestamp
       note = NoteItem(
         id       : id, 
@@ -545,7 +591,8 @@ proc genWebsite(templates; config: AppConfig, notesPaths: seq[Path], demo: bool)
         hashtags : noteTags  doc)
       path = saveNoteDir / (id & ".html")
       html = fixUrls( relativePath(parentDir p, config.notesDir),
-                      config.baseUrl, 
+                      config.baseUrl,
+                      libNameMap,
                       renderNote(doc, note, templates))
 
     if id in pathById:
@@ -568,14 +615,13 @@ proc genWebsite(templates; config: AppConfig, notesPaths: seq[Path], demo: bool)
     let suggestedTags = tagsCount.keys.toseq.mapit initHashTag(it, "")
 
     echo "+ index.html"
-    writeHtml saveDir/"index.html",    fixUrls(Path"", config.baseUrl, `index.html`(templates))
+    writeHtml saveDir/"index.html",    fixUrls(Path"", config.baseUrl, libNameMap, `index.html`(templates))
     echo "+ notes.html"
-    writeHtml saveDir/"notes.html",    fixUrls(Path"", config.baseUrl, `notes.html`(templates, notes, suggestedTags))
+    writeHtml saveDir/"notes.html",    fixUrls(Path"", config.baseUrl, libNameMap, `notes.html`(templates, notes, suggestedTags))
     echo "+ profile.html"
-    writeHtml saveDir/"profile.html",  fixUrls(Path"", config.baseUrl, `profile.html`(templates))
-    # TODO info page -- tags, number of usages of tags, diagrams, ...
+    writeHtml saveDir/"profile.html",  fixUrls(Path"", config.baseUrl, libNameMap, `profile.html`(templates))
     echo "+ info.html"
-    writeHtml saveDir/"info.html",     fixUrls(Path"", config.baseUrl, `info.html`(templates, tagsCount))
+    writeHtml saveDir/"info.html",     fixUrls(Path"", config.baseUrl, libNameMap, `info.html`(templates, tagsCount))
 
 
 func toAppConfig(cfg: Config): AppConfig =
@@ -592,8 +638,8 @@ func toAppConfig(cfg: Config): AppConfig =
     libsDir      : Path gsv("paths", "libs_dir"),
   )
 
+# TODO info page -- tags, number of usages of tags, diagrams, ...
 # TODO RSS for all tags, and some specific tags stated in the config file
-# TODO name mangle config.libsDir
 # TODO download deps
 
 when isMainModule:
@@ -634,6 +680,10 @@ when isMainModule:
           if lastModif < t:
              lastModif = t
              genWebsite templates, config, @[fpath], true
+             stdout.write '!'
+          else:
+            stdout.write '.'
+
           sleep watchDelay
 
       of "init":
