@@ -1,0 +1,88 @@
+<note id="html-over-markdown" timestamp="1723731826">
+
+  <summary>
+    general test
+  </summary>
+
+  <article>
+    <h1>why do I prefer HTML over markdown?</h1>
+    <p>
+      I really don't understand the hype about markdown:
+    </p>
+    <ol>
+      <li>
+        It is very hard to <b>parse</b>
+      </li>
+      <li>
+        It does not have a lot of features built-in like <i>tables</i>, hence there are a lots of extentions
+      </li>
+      <li>
+        a lot of features are missing, for example you cannot set alignment of text or set width of an image
+      </li>
+    </ol>
+
+    <p>
+      The downsides mentioned above are kind of bi-directional, meaning one influences the other.
+      for example, missing a lots of features causes variant extentions, having too many extentions
+      makes markdown parser libraries more complex and a lot of them not supporting the features you may want.
+      or having a wierd syntax makes it a lot harder to write a parser for it.
+    </p>
+
+    <p>
+      You may argue that you can just write custom HTML wherever you want,
+      but
+      <a href="https://joshondesign.com/2019/06/28/markdown_vs_html"><b>why don't write HTML from scratch??</b></a>
+    </p>
+
+    <p>
+      one time I used a markdown parser happily with english and ASCII characters,
+      but then I used it for another language like Arabic and it would not able to parse.
+      maybe you'd argue that it is because of the programmer did not pay attention to Unicode characters;
+      correct, but I say it is less likely to happen in XML or HTML parser <i>because of its obvious syntax</i>.
+    </p>
+
+    <p>
+      Not to mention markdown viewers often do not support Arabic and 
+      they shows you a real mess when you want to 
+      write left to right words in right to left languages.
+    </p>
+
+    <hr />
+
+    <p>
+      So, instead of writing <code>.md</code> and then converting it to <code>.html</code>,
+      I've decided to just write raw HTML, in this way, I don't need a
+      <em>super extensible markdown library with built-in support of feature 1 and feature 2</em> which I don't care at
+      all.
+    </p>
+
+    <p>
+      HTML is a
+      <em><a href="https://en.wikipedia.org/wiki/Markup_language">MarkUp Language</a></em> in contrast to
+      Mark<b>Down</b>,
+      I'll bet you haven't heard of tags such as
+
+      <code>&lt;blockquote&gt;</code> for <i>quotation</i>
+      or
+      <code>&lt;cite&gt;</code>
+      or even
+      <code>&lt;kbd&gt;</code> for <i>keyboard shortcuts</i>.
+
+      The list goes on but HTML already has lots of things you are looking for in the document format
+      <em>since long time ago</em>.
+      why bother yourself to write a program to convert a limited format into a rich format?
+    </p>
+
+    <p>
+      You can pick your favorite code editor and
+      with setting up some code suggestions and installing
+      <a href="https://marketplace.visualstudio.com/items?itemName=letrieu.expand-region">expand region</a> extention,
+      be very happy with writing raw HTML. Plus, you don't need to convert it in order to see it!
+    </p>
+  </article>
+
+  <tags>
+    #programming
+    #lang en
+  </tags>
+</note>
