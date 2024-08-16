@@ -31,3 +31,25 @@ template {
 th {
   text-transform: none !important;
 }
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table th {
+  min-width: 120px;
+}
+
+/* https://getbootstrap.com/docs/5.0/layout/breakpoints/ */
+/* https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries/Using_media_queries */
+@media (width <=576px) {
+  .container {
+    padding: 2px;
+    margin: 0;
+  }
+
+  .card-body {
+    padding: 8px;
+  }
+}

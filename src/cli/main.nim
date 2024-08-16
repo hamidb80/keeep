@@ -499,7 +499,7 @@ func `info.html`(templates; tagsCount: CountTable[string], totalNotes: Natural):
                   case x.attr"name"
                   of   "tag"    : newText h
                   of   "usage"  : newText $c
-                  of   "percent": newText $(c/totalNotes*100)
+                  of   "percent": newText formatFloat(c / totalNotes * 100, ffDecimal, 2)
                   else          : raisev "no"
                 else: shallowCopy x
               else: x

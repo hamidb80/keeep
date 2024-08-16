@@ -68,35 +68,38 @@
             </span>
           </h4>
 
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>
-                  <span>
-                    Date
-                  </span>
-                </th>
-                <th>
-                  <span>
-                    Score
-                  </span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- TODO to be filled at runtime -->
-              <template>
+          <div class="table-wrapper">
+            <table class="table table-hover">
+              <thead>
                 <tr>
-                  <td>
-                    <slot name="date" />
-                  </td>
-                  <td>
-                    <slot name="score" />
-                  </td>
+                  <th>
+                    <span>
+                      Date
+                    </span>
+                  </th>
+                  <th>
+                    <span>
+                      Score
+                    </span>
+                  </th>
                 </tr>
-              </template>
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                <!-- TODO to be filled at runtime -->
+                <template>
+                  <tr>
+                    <td>
+                      <slot name="date" />
+                    </td>
+                    <td>
+                      <slot name="score" />
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
         </div>
       </div>
     </main>
@@ -193,31 +196,35 @@
             <i class="bi bi-dice-5"></i>
             <span>Random</span>
           </button>
-          <table class="table table-hover bg-white" id="notes-item-table">
-            <thead>
-              <tr>
-                <th>
-                  <i class="bi bi-alphabet-uppercase"></i>
-                  <span>Title</span>
-                </th>
-                <th>
-                  <i class="bi bi-hash"></i>
-                  <span>Tags</span>
-                </th>
-                <th>
-                  <i class="bi bi-calendar-event"></i>
-                  <span>Date</span>
-                </th>
-                <th>
-                  <i class="bi bi-percent"></i>
-                  <span>Score</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody id="notes-rows">
-              <notes-rows />
-            </tbody>
-          </table>
+
+          <div class="table-wrapper">
+            <table class="table table-hover bg-white" id="notes-item-table">
+              <thead>
+                <tr>
+                  <th style="min-width: 180px;">
+                    <i class="bi bi-alphabet-uppercase"></i>
+                    <span>Title</span>
+                  </th>
+                  <th style="min-width: 280px;">
+                    <i class="bi bi-hash"></i>
+                    <span>Tags</span>
+                  </th>
+                  <th>
+                    <i class="bi bi-calendar-event"></i>
+                    <span>Date</span>
+                  </th>
+                  <th>
+                    <i class="bi bi-percent"></i>
+                    <span>Score</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="notes-rows">
+                <notes-rows />
+              </tbody>
+            </table>
+          </div>
+
           <input type="hidden" id="read-search-queries-from-url" />
         </section>
       </div>
@@ -278,21 +285,21 @@
               </span>
             </h3>
 
-            <button class="btn btn-outline-primary" id="import-db-btn">
+            <button class="btn btn-outline-primary my-1" id="import-db-btn">
               <i class="bi bi-box-arrow-in-right"></i>
               <span>
                 Import Data (merge)
               </span>
             </button>
 
-            <button class="btn btn-outline-primary" id="export-db-btn">
+            <button class="btn btn-outline-primary my-1" id="export-db-btn">
               <i class="bi bi-box-arrow-right"></i>
               <span>
                 Export Data (download)
               </span>
             </button>
 
-            <button class="btn btn-outline-primary" id="clear-db-btn">
+            <button class="btn btn-outline-primary my-1" id="clear-db-btn">
               <i class="bi bi-trash2"></i>
               <span>
                 Clear Data
@@ -347,34 +354,37 @@
             </span>
           </h3>
 
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>
-                  <i class="bi bi-hash"></i>
-                  <span>
-                    Tag
-                  </span>
-                </th>
-                <th>
-                  <i class="bi bi-123"></i>
-                  <span>
-                    Usage
-                  </span>
-                </th>
-                <th>
-                  <i class="bi bi-percent"></i>
-                  <span>
-                    Percent
-                  </span>
-                </th>
+          <div class="table-wrapper">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>
+                    <i class="bi bi-hash"></i>
+                    <span>
+                      Tag
+                    </span>
+                  </th>
+                  <th>
+                    <i class="bi bi-123"></i>
+                    <span>
+                      Usage
+                    </span>
+                  </th>
+                  <th>
+                    <i class="bi bi-percent"></i>
+                    <span>
+                      Percent
+                    </span>
+                  </th>
 
-              </tr>
-            </thead>
-            <tbody>
-              <tag-usage-rows />
-            </tbody>
-          </table>
+                </tr>
+              </thead>
+              <tbody>
+                <tag-usage-rows />
+              </tbody>
+            </table>
+          </div>
+
         </section>
 
       </div>
@@ -388,7 +398,7 @@
 <template name="common-head">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
@@ -404,7 +414,8 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-light.min.css">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-light.min.css">
 
   <link rel="stylesheet" href="!/style.css">
   <script defer src="!/page.js"></script>
