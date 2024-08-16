@@ -123,7 +123,7 @@
           <span>Notes</span>
         </h1>
 
-        <div class="my-4">
+        <section class="my-4">
           <h3>
             <span>
               <i class="bi bi-percent"></i>
@@ -144,9 +144,9 @@
             </select>
 
           </div>
-        </div>
+        </section>
 
-        <div>
+        <section>
           <search class="mt-4">
             <h3>
               <i class="bi bi-search"></i>
@@ -182,9 +182,9 @@
             </div>
 
           </search>
-        </div>
+        </section>
 
-        <div class="mt-4">
+        <section class="mt-4">
           <h3>
             <i class="bi bi-table"></i>
             <span>List</span>
@@ -219,33 +219,10 @@
             </tbody>
           </table>
           <input type="hidden" id="read-search-queries-from-url" />
-        </div>
+        </section>
       </div>
     </main>
 
-  </body>
-</template>
-
-<template name="about-page">
-
-  <head>
-    <use template="common-head"></use>
-    <title>About</title>
-  </head>
-
-  <body class="bg-light">
-    <main>
-      <use template="navbar"></use>
-
-      <div class="container">
-        <h1 class="text-center">
-          About
-        </h1>
-        <div>
-          not yet
-        </div>
-      </div>
-    </main>
   </body>
 </template>
 
@@ -356,16 +333,41 @@
           <i class="bi bi-info-square"></i>
           <span>Info</span>
         </h1>
-        <div class="my-4">
-          <section class="my-3">
-            <h3>
-              <i class="bi bi-pie-chart"></i>
-              <span>
-                Summary
-              </span>
-            </h3>
-          </section>
-        </div>
+
+        <section class="my-3">
+          all posts:
+          <slot name="total_notes"></slot>
+        </section>
+
+        <section class="my-3">
+          <h3>
+            <i class="bi bi-hashtag"></i>
+            <span>
+              Tags Usage
+            </span>
+          </h3>
+
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>
+                  <span>
+                    Tag
+                  </span>
+                </th>
+                <th>
+                  <span>
+                    Usage
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tag-usage-rows></tag-usage-rows>
+            </tbody>
+          </table>
+        </section>
+
       </div>
 
     </main>
@@ -415,6 +417,18 @@
     </td>
     <td note-score :note-id="note-id">
       <slot name="score"></slot>
+    </td>
+  </tr>
+</template>
+
+<template name="tag-usage-row">
+  <tr>
+    <td>
+      #
+      <slot name="tag" />
+    </td>
+    <td>
+      <slot name="usage" />
     </td>
   </tr>
 </template>

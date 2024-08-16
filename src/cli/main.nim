@@ -204,7 +204,7 @@ func hashTagLabel(s): string =
   else            : s.substr 1
 
 func parseHashTag(s): HashTag = 
-  let (name, val) = splitOnce(s, ':')
+  let (name, val) = splitOnce(s, ' ')
   initHashTag hashTagLabel name, strip val
 
 func parseHashTags(s): seq[HashTag] = 
@@ -477,15 +477,37 @@ func `profile.html`(templates): XmlNode =
   result = newHtmlDoc()
   map result, t, identityXml
 
-func `info.html`(templates; tagsCount: CountTable[string]): XmlNode = 
+func `info.html`(templates; tagsCount: CountTable[string], totalNotes: Natural): XmlNode = 
   let t = templates.getTemplate"info-page"
 
   func identityXml(x): XmlNode = 
     if x.isElement: 
       case  x.tag
-      of    "use": templates.getTemplate x.attr"template"
-      else       : shallowCopy x
-    else         : x
+      of    "use"            : templates.getTemplate x.attr"template"
+      of    "slot"           : 
+        case x.attr"name"
+        of   "total_notes":  newText $totalNotes
+        else: raisev "invalid slot"
+      of    "tag-usage-rows" : 
+        var acc = newWrapper()
+        let t = templates.getTemplate"tag-usage-row"
+        for h, c in tagsCount:
+          capture h, c:
+            proc ii(x): XmlNode = 
+              if x.isElement:
+                case x.tag
+                of "slot":
+                  case x.attr"name"
+                  of   "tag"  : newText h
+                  of   "usage": newText $c
+                  else        : raisev "no"
+                else: shallowCopy x
+              else: x
+
+            map acc, t, ii
+        acc
+      else                   : shallowCopy x
+    else                     : x
 
   result = newHtmlDoc()
   map result, t, identityXml
@@ -511,7 +533,7 @@ func fixUrls(relPath: Path, baseUrl: string, libNameMap: TableRef[Path, Path], x
   fixUrlsImpl relPath, baseUrl, libNameMap, x
   x
 
-const timestampSep = "--t"
+const timestampSep = "--T"
 
 func addTimestamp(p, u): Path = 
   let (dir, name, ext) = splitFile p
@@ -625,7 +647,7 @@ proc genWebsite(templates, config; notesPaths: seq[Path], demo: bool) =
     echo "+ profile.html"
     writeHtml saveDir/"profile.html",  fixUrls(Path"", config.baseUrl, libNameMap, `profile.html`(templates))
     echo "+ info.html"
-    writeHtml saveDir/"info.html",     fixUrls(Path"", config.baseUrl, libNameMap, `info.html`(templates, tagsCount))
+    writeHtml saveDir/"info.html",     fixUrls(Path"", config.baseUrl, libNameMap, `info.html`(templates, tagsCount, len notes))
 
 
 func toAppConfig(cfg: Config): AppConfig =
@@ -642,7 +664,6 @@ func toAppConfig(cfg: Config): AppConfig =
     libsDir      : Path gsv("paths", "libs_dir"),
   )
 
-# TODO info page -- tags, number of usages of tags, diagrams, ...
 # TODO RSS for all tags, and some specific tags stated in the config file
 # TODO download deps
 
