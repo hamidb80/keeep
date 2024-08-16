@@ -121,6 +121,7 @@ func `/`(a: Path, b: string): Path =
 func `%`(p): JsonNode = 
   % str p
 
+
 proc rmdir(p) = 
   removeDir str p, true
 
@@ -132,16 +133,17 @@ proc mkfile(p; content: sink string) =
   mkdir dir
   writeFile str p, content
 
+proc cpdir(src, dest: Path) = 
+  copyDir str src, str dest
+
+proc mvFile(a, b: Path) = 
+  moveFile str a, str b
+
 
 func addExt(p; ext: string): Path = 
   ## adds file extention if missing
   if   p.str.endsWith ext:   p
   else               : Path $p & ext
-
-
-proc cpdir(src, dest: Path) = 
-  copyDir $src, $dest
-
 
 func toStringImpl(result: var string; x) = 
   case x.kind
@@ -551,10 +553,12 @@ proc genWebsite(templates, config; notesPaths: seq[Path], demo: bool) =
     # name mangeling
     let now = unow()
     for f in walkDirRec str saveLibsDir:
-      let p = relativePath(Path f, saveLibsDir)
-      let np = addTimestamp(p, now)
+      let 
+        p  = relativePath(Path f, saveLibsDir)
+        np = addTimestamp(p, now)
+
       libNameMap[p] = np
-      moveFile f, (parentDir f) / $np
+      mvFile Path f, Path(parentDir f) / np
 
   else:
     # use last name mangeling
