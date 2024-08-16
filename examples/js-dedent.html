@@ -1,0 +1,38 @@
+<note id="js-dedent-66bf3483e32dbc46ce09a2bd" timestamp="1723806851">
+  <summary>
+    test code highlighting
+  </summary>
+
+  <article>
+
+    <h1>
+      dedent function implmentation in JS
+    </h1>
+
+    <pre><code lang="js" highlight>
+      function dedent(text) {
+        // removes common indentation from `text`
+        const lines = text.split(&apos;\n&apos;)
+
+        let minIndent = Infinity
+        lines.forEach(line =&gt; {
+          if (line.trim().length != 0) {
+            const match = line.match(/^\s*/)
+            if (match &amp;&amp; match[0].length &lt; minIndent) {
+              minIndent = match[0].length
+            }
+          }
+        })
+        return lines
+          .map(line =&gt; line.substring(minIndent)) // crop after minIndent
+          .join(&apos;\n&apos;)
+          .trim()
+      }
+    </code></pre>
+  </article>
+
+  <tags>
+    #js
+    #programming
+  </tags>
+</note>
