@@ -1,7 +1,6 @@
 import std/[
   xmltree,  json,
   strutils, strformat, sequtils,
-  times,
   tables, strtabs,
   os, paths, streams,
   algorithm, oids,
