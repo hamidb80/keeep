@@ -400,3 +400,16 @@ up.compiler('#share-query-btn', el => {
         (_, val) => val.length != ''))
   }
 })
+
+up.compiler('latex', el => {
+  let opts = {
+    displayMode: el.hasAttribute("block"),
+    throwOnError: false,
+    macros: {}
+  }
+  let bdo = newElement("bdo", { "dir": "ltr" }) // to aviod conflict  with rtl languages
+  let tex = el.innerHTML
+
+  el.replaceChildren(bdo)
+  katex.render(tex, bdo, opts)
+})

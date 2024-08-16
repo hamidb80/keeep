@@ -18,7 +18,7 @@ type
 
   HashTag* = object
     ## simple tag: #math
-    ## data   tag: #page: 2
+    ## data   tag: #pages 2
     name*, value*: string
 
   UnixTimestamp* = int
@@ -53,7 +53,7 @@ const
   htmlPrefix = "<!DOCTYPE html>"
   configPath = "./config.ini"
   appname    = "Keeep"
-  watchDelay = 100
+  watchDelay = 200
   help       = dedent fmt"""
 
     ..:: {appname} ::..
@@ -498,9 +498,10 @@ func `info.html`(templates; tagsCount: CountTable[string], totalNotes: Natural):
                 case x.tag
                 of "slot":
                   case x.attr"name"
-                  of   "tag"  : newText h
-                  of   "usage": newText $c
-                  else        : raisev "no"
+                  of   "tag"    : newText h
+                  of   "usage"  : newText $c
+                  of   "percent": newText $(c/totalNotes*100)
+                  else          : raisev "no"
                 else: shallowCopy x
               else: x
 
@@ -697,27 +698,37 @@ when isMainModule:
         echo ">>>> generating HTML file of desired note"
         let        
           templates  = loadHtmlTemplates config.templateFile
-          fpath      = Path params[1]
+          fpath      = config.notesDir / params[1]
 
-        var lastModif: Time
-        while true:
-          let t = getLastModificationTime str fpath
-          if lastModif < t:
-             lastModif = t
-             genWebsite templates, config, @[fpath], true
-             stdout.write '!'
-          else:
-            stdout.write '.'
+        if fileExists $fpath:
+          var lastModif: Time
+          while true:
+            let t = getLastModificationTime str fpath
+            if lastModif < t:
+              lastModif = t
+              genWebsite templates, config, @[fpath], true
+              stdout.write '!'
+            else:
+              stdout.write '.'
 
-          sleep watchDelay
+            sleep watchDelay
+        else:
+          echo "cannot file file in ", $fpath
+          quit 1
 
       of "init":
         echo "download necessary files from: ..."
           
       of "new":
-        let    notePath = addExt(config.notesDir / params[1], ".html")
-        mkfile notePath,  readfile    $config.blueprintFile
-        echo "new note created in: ", $notePath
+        let notePath = addExt(config.notesDir / params[1], ".html")
+        
+        if fileExists $notePath:
+          echo "note already exists in ", $notePath
+          quit 1
+
+        else:
+          mkfile notePath,  readfile    $config.blueprintFile
+          echo "new note created in: ", $notePath
           
       else:
         echo "Error: Invalid command: '", params[0], "'"
