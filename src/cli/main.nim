@@ -629,10 +629,6 @@ proc genWebsite(templates, config; notesPaths: seq[Path], demo: bool) =
         title    : findTitle doc, 
         hashtags : noteTags  doc)
       path = saveNoteDir / (id & ".html")
-      html = fixUrls( relativePath(parentDir p, config.notesDir),
-                      config.baseUrl,
-                      libNameMap,
-                      renderNote(doc, note, templates))
 
     if id in pathById:
       raisev "Error: Duplicated id! ids of " & $pathById[id] & " and " & $p & "are the same"
@@ -647,7 +643,10 @@ proc genWebsite(templates, config; notesPaths: seq[Path], demo: bool) =
       writefile $p, $Html doc
 
     add notes, note
-    writeHtml path, html 
+    writeHtml path, fixUrls( relativePath(parentDir p, config.notesDir),
+                      config.baseUrl,
+                      libNameMap,
+                      renderNote(doc, note, templates))
 
   if not demo: # otherPages
     sort notes, genCmp(timestamp, NoteItem), Descending
@@ -683,6 +682,7 @@ func toAppConfig(cfg: Config): AppConfig =
 
 # TODO download deps for offline use
 # TODO details meta and open graph tags for SEO | use summary
+# TODO local templates for simplicty >> define a simple template for repeative patterns
 
 when isMainModule:
   let params = commandLineParams()
