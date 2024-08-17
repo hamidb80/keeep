@@ -46,8 +46,10 @@ using
   u: UnixTimestamp
   templates: Table[string, XmlNode]
   config: AppConfig
+  notes : seq[NoteItem]
 
 const 
+  timestampSep = "--T"
   notFound   = -1
   htmlPrefix = "<!DOCTYPE html>"
   configPath = "./config.ini"
@@ -401,7 +403,7 @@ func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
   map result,             templates.getTemplate"note-page",   repl
 
 
-func notesItemRows(notes: seq[NoteItem]; templates): XmlNode = 
+func notesItemRows(notes, templates): XmlNode = 
   result = newWrapper()
 
   proc ctx(i: int, n: NoteItem, key: string): string = 
@@ -441,7 +443,7 @@ func notesItemRows(notes: seq[NoteItem]; templates): XmlNode =
     map result, templates.getTemplate"note-item", repl
     
 
-func `notes.html`(templates; notes: seq[NoteItem], suggestedTags: seq[HashTag]): XmlNode = 
+func `notes.html`(templates, notes; suggestedTags: seq[HashTag]): XmlNode = 
   let t = templates.getTemplate"notes-page"
 
   func identityXml(x): XmlNode = 
@@ -518,6 +520,12 @@ func `info.html`(templates; tagsCount: CountTable[string], totalNotes: Natural):
   result = newHtmlDoc()
   map result, t, identityXml
 
+func `feed.rss`(templates, notes): XmlNode = 
+  ## https://medium.com/samsung-internet-dev/add-rss-feeds-to-your-website-to-keep-your-core-readers-engaged-3179dca9c91e
+  ## https://www.thoughtco.com/how-to-add-rss-feed-3469294
+  # TODO RSS for all tags, and some specific tags stated in the config file
+  newElement "rss"
+
 proc fixUrlsImpl(relPath: Path, baseUrl: string, libNameMap: TableRef[Path, Path], x: XmlNode) = 
   if x.isElement:
     if not isNil x.attrs:
@@ -539,7 +547,6 @@ func fixUrls(relPath: Path, baseUrl: string, libNameMap: TableRef[Path, Path], x
   fixUrlsImpl relPath, baseUrl, libNameMap, x
   x
 
-const timestampSep = "--T"
 
 func addTimestamp(p, u): Path = 
   let (dir, name, ext) = splitFile p
@@ -656,6 +663,8 @@ proc genWebsite(templates, config; notesPaths: seq[Path], demo: bool) =
     writeHtml saveDir/"profile.html",  fixUrls(Path"", config.baseUrl, libNameMap, `profile.html`(templates))
     echo "+ info.html"
     writeHtml saveDir/"info.html",     fixUrls(Path"", config.baseUrl, libNameMap, `info.html`(templates, tagsCount, len notes))
+    echo "+ feed.rss"
+    writeFile $saveDir/"feed.rss",    $fixUrls(Path"", config.baseUrl, libNameMap, `feed.rss`(templates, notes))
 
 
 func toAppConfig(cfg: Config): AppConfig =
@@ -672,10 +681,8 @@ func toAppConfig(cfg: Config): AppConfig =
     libsDir      : Path gsv("paths", "libs_dir"),
   )
 
-# TODO RSS for all tags, and some specific tags stated in the config file
-# TODO download deps
-# TODO details meta tag for SEO
-# TODO append footnote in article element
+# TODO download deps for offline use
+# TODO details meta and open graph tags for SEO | use summary
 
 when isMainModule:
   let params = commandLineParams()
