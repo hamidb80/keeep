@@ -471,3 +471,7 @@ up.compiler('footnote', el => {
 
   fnwrapper.appendChild(fnEl)
 })
+
+up.macro('blockquote', el => {
+  el.classList.add('px-5', 'py-3', 'fst-italic', 'bg-light')
+})
