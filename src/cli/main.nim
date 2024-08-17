@@ -163,6 +163,7 @@ func toStringImpl(result: var string; x) =
         if v != "":
           << '='
           << '"'
+          # TODO escape attr value addEscapedAttr
           << v
           << '"'
 
@@ -313,7 +314,7 @@ func noteTags(x): seq[HashTag] =
   raisev "cannot find <tags> element"
 
 
-func map(father: var XmlNode, src: XmlNode, mapper: proc(x: XmlNode): XmlNode) {.effectsOf: mapper.} = 
+func map(father, src: XmlNode, mapper: proc(x: XmlNode): XmlNode) {.effectsOf: mapper.} = 
   if src.isWrapper:
     for n in src:
       map father, n, mapper
@@ -396,7 +397,8 @@ func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
     else                  : x
   
   result = newHtmlDoc()
-  map result, templates.getTemplate"note-page", repl
+  map doc.articleElement, templates.getTemplate"article-end", repl
+  map result,             templates.getTemplate"note-page",   repl
 
 
 func notesItemRows(notes: seq[NoteItem]; templates): XmlNode = 
