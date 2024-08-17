@@ -94,6 +94,10 @@ template iff(cond, iftrue, iffalse): untyped =
 template xmlEscape(s): untyped =
   xmltree.escape s
 
+template genCmp(field, typ): untyped = 
+  proc (a, b: typ): int = 
+    cmp a.field, b.field
+
 # ---------------------------------------
 
 template popd(l): untyped = 
@@ -637,6 +641,8 @@ proc genWebsite(templates, config; notesPaths: seq[Path], demo: bool) =
     writeHtml path, html 
 
   if not demo: # otherPages
+    sort notes, genCmp(timestamp, NoteItem), Descending
+
     sort tagsCount
     let suggestedTags = tagsCount.keys.toseq.mapit initHashTag(it, "")
 
