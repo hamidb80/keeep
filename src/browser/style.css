@@ -17,10 +17,14 @@ article figure img {
 }
 
 * {
-  font-family: "Vazirmatn", sans-serif;
+  font-family: "Fira Sans", "Vazirmatn", sans-serif;
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
+}
+
+code * {
+  font-family: "Fira Code";
 }
 
 [hidden],

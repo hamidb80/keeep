@@ -33,6 +33,10 @@ Rethinking note taking!
 ### Frameworks
 - [Unpoly](https://unpoly.com/)
 
+### Libraries
+- https://cdnjs.com/libraries/highlight.js
+- https://fonts.google.com/
+
 ### Programming Languages
 - [Nim](https://nim-lang.org/) 👑
 - JavaScript 

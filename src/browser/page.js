@@ -96,7 +96,7 @@ function setAttrs(el, attrsObj) {
 function newElement(tag, attrs = {}, inner = '') {
   let el = document.createElement(tag)
   setAttrs(el, attrs)
-  el.innerText = inner
+  el.innerHTML = inner
   return el
 }
 
@@ -436,7 +436,38 @@ up.compiler('latex', el => {
   katex.render(tex, bdo, opts)
 })
 
-up.compiler('[highlight]', element => {
-  element.innerHTML = dedent(element.innerHTML)
-  hljs.highlightElement(element)
+up.compiler('code', el => {
+  if (el.hasAttribute("block")) {
+    el.innerHTML = dedent(el.innerHTML)
+  }
+
+  if (el.hasAttribute("lang")) {
+    let lang = el.getAttribute("lang")
+    el.classList.add(`lang-${lang}`)
+  }
+
+  if (el.hasAttribute("highlight")) {
+    hljs.highlightElement(el)
+  }
+})
+
+var footnoteCounter = null
+
+up.compiler('article', el => {
+  footnoteCounter = 0
+})
+
+up.compiler('footnote', el => {
+  footnoteCounter++
+
+  let id = `fn-${footnoteCounter}`
+  let fnwrapper = q`#footnotes`
+  let fnEl = newElement("li", { id }, el.innerHTML)
+  let replEl = newElement("a", { href: `#${id}` })
+  let sup = newElement("sup", {}, `${footnoteCounter}`)
+
+  replEl.appendChild(sup)
+  el.outerHTML = replEl.outerHTML
+
+  fnwrapper.appendChild(fnEl)
 })

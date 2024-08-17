@@ -667,6 +667,7 @@ func toAppConfig(cfg: Config): AppConfig =
 # TODO RSS for all tags, and some specific tags stated in the config file
 # TODO download deps
 # TODO details meta tag for SEO
+# TODO append footnote in article element
 
 when isMainModule:
   let params = commandLineParams()
