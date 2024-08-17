@@ -397,11 +397,12 @@ up.compiler('[path-breadcrumb]', el => {
   let subs = el.innerHTML
     .trim()
     .split(/[\/\\]/g)
-    .map(p => newElement('li', { 'class': 'breadcrumb-item py-2' }, p))
+    .map(p => newElement('li', { 'class': 'breadcrumb-item' }, p))
 
   last(subs).classList.add('text-primary')
 
   el.replaceChildren(...subs)
+  el.classList.add('py-2', 'px-3', 'rounded')
 })
 
 // '#tag-query-errors'

@@ -56,3 +56,7 @@ table th {
     padding: 8px;
   }
 }
+
+html, body {
+  min-height: 100vh;
+}

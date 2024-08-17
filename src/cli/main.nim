@@ -625,7 +625,7 @@ proc genWebsite(templates, config; notesPaths: seq[Path], demo: bool) =
       note = NoteItem(
         id       : id, 
         timestamp: timestamp, 
-        path     : p,
+        path     : relativePath(p, config.notesDir),
         title    : findTitle doc, 
         hashtags : noteTags  doc)
       path = saveNoteDir / (id & ".html")
