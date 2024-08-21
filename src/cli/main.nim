@@ -683,6 +683,7 @@ func toAppConfig(cfg: Config): AppConfig =
 # TODO download deps for offline use
 # TODO details meta and open graph tags for SEO | use summary
 # TODO local templates for simplicty >> define a simple template for repeative patterns
+# XXX  add public and private releases where you can define which tags are private and should not be included in public release 
 
 when isMainModule:
   let params = commandLineParams()
