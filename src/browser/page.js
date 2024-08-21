@@ -476,3 +476,8 @@ up.compiler('footnote', el => {
 up.macro('blockquote', el => {
   el.classList.add('px-5', 'py-3', 'fst-italic', 'bg-light')
 })
+
+up.compiler('[digit]', el => {
+  // convert ASCII digits to arabic ones
+  el.innerHTML = el.innerHTML.replace(/\d/g, chr => "٠١٢٣٤٥٦٧٨٩"[parseInt(chr)])
+})

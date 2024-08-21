@@ -684,6 +684,8 @@ func toAppConfig(cfg: Config): AppConfig =
 # TODO details meta and open graph tags for SEO | use summary
 # TODO local templates for simplicty >> define a simple template for repeative patterns
 # XXX  add public and private releases where you can define which tags are private and should not be included in public release 
+# XXX  add changelog section
+# XXX  add how mature is the content like https://maggieappleton.com
 
 when isMainModule:
   let params = commandLineParams()
