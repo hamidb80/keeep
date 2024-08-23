@@ -19,10 +19,9 @@ article figure img {
 * {
   font-family: "Fira Sans", "Vazirmatn", sans-serif;
   font-optical-sizing: auto;
-  font-weight: 400;
 }
 
-code * {
+code, code * {
   font-family: "Fira Code";
 }
 
@@ -57,6 +56,7 @@ table th {
   }
 }
 
-html, body {
+html,
+body {
   min-height: 100vh;
 }

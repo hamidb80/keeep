@@ -13,6 +13,11 @@ import pkg/htmlparser
 # ---------------------------------------
 
 type
+
+  ArticleAnalyze = object 
+    hasLatex            : bool
+    programmingLanguages: seq[string]
+
   Html = distinct XmlNode
 
   HashTag* = object
@@ -365,7 +370,31 @@ func wrap(hashtags: seq[HashTag], templates): XmlNode =
 func newHtmlDoc: XmlNode = 
   newElement "html"
 
+
+func analyzeArticleImpl(x; result: var ArticleAnalyze) = 
+  if x.isElement:
+    case x.tag
+    of "code":
+      let l = x.attr "lang"
+      if  l != "" and l notin result.programmingLanguages:
+        add result.programmingLanguages, l
+
+    of "latex":
+      result.hasLatex = true
+
+    else: discard
+
+    for n in x:
+      analyzeArticleImpl n, result
+
+func analyzeArticle(x): ArticleAnalyze = 
+  analyzeArticleImpl x, result
+
 func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
+  var 
+    a  = doc.articleElement
+    aa = analyzeArticle a
+
   proc ctx(key: string): string = 
     case key
     of   "note-id"  : note.id
@@ -378,13 +407,21 @@ func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
         let  tname = x.attr"template"
         case tname
         of   "title"      : newText note.title
-        of   "article"    : doc.articleElement
+        of   "article"    : a
         of   "tags"       : note.hashtags.wrap(templates)
         of   "action_btns": raisev "no defined yet"
         of   "note-id"    : newText note.id
         of   "note-path"  : newText $note.path
         of   "date"       : newText $note.timestamp
+        of   "custom-deps":
+          var w = newWrapper()
+          # if aa.hasLatex:
+          for lang in aa.programmingLanguages:
+            w.add newXmlTree("script", [], xa {"src": fmt"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/{lang}.min.js"})
+          w
+
         else              : templates.getTemplate tname
+
       else                : 
         var newAttrs: seq[(string, string)]
 
@@ -399,8 +436,8 @@ func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
     else                  : x
   
   result = newHtmlDoc()
-  map doc.articleElement, templates.getTemplate"article-end", repl
-  map result,             templates.getTemplate"note-page",   repl
+  map a,      templates.getTemplate"article-end", repl
+  map result, templates.getTemplate"note-page",   repl
 
 
 func notesItemRows(notes, templates): XmlNode = 
@@ -686,6 +723,7 @@ func toAppConfig(cfg: Config): AppConfig =
 # XXX  add public and private releases where you can define which tags are private and should not be included in public release 
 # XXX  add changelog section
 # XXX  add how mature is the content like https://maggieappleton.com
+# TODO define compiler like in unpoly
 
 when isMainModule:
   let params = commandLineParams()

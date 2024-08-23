@@ -260,7 +260,7 @@ function searchNotes(text, tagQuery) {
       }
     }
 
-    el.style.display = matches ? "" : "none"
+    el.style['display'] = matches ? "" : "none"
   }
 }
 
@@ -437,7 +437,25 @@ up.compiler('latex', el => {
   katex.render(tex, bdo, opts)
 })
 
+// up.compiler('article', wrapper => {
+//   for (let codeEl of wrapper.querySelectorAll('code')) {
+//     let lang = codeEl.getAttribute("lang")
+//     if (lang) {
+//       let src = newElement("script", { src: `https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/${lang}.min.js` })
+//       document.head.appendChild(src)
+//       console.log(src)
+//     }
+//   }
+// })
+
+
+up.compiler('pre', el => {
+  el.setAttribute('dir', 'ltr')
+  el.classList.add('text-start')
+})
+
 up.compiler('code', el => {
+
   if (el.hasAttribute("block")) {
     el.innerHTML = dedent(el.innerHTML)
   }
@@ -445,9 +463,6 @@ up.compiler('code', el => {
   if (el.hasAttribute("lang")) {
     let lang = el.getAttribute("lang")
     el.classList.add(`lang-${lang}`)
-  }
-
-  if (el.hasAttribute("highlight")) {
     hljs.highlightElement(el)
   }
 })
@@ -458,13 +473,13 @@ up.compiler('article', el => {
   footnoteCounter = 0
 })
 
-up.compiler('footnote', el => {
+up.compiler('[footnote]', el => {
   footnoteCounter++
 
   let id = `fn-${footnoteCounter}`
   let fnwrapper = q`#footnotes`
   let fnEl = newElement("li", { id }, el.innerHTML)
-  let replEl = newElement("a", { href: `#${id}` })
+  let replEl = newElement("a", { href: `#${id}`, digit: '' })
   let sup = newElement("sup", {}, `${footnoteCounter}`)
 
   replEl.appendChild(sup)
@@ -480,4 +495,13 @@ up.macro('blockquote', el => {
 up.compiler('[digit]', el => {
   // convert ASCII digits to arabic ones
   el.innerHTML = el.innerHTML.replace(/\d/g, chr => "٠١٢٣٤٥٦٧٨٩"[parseInt(chr)])
+})
+
+up.compiler('[par]', el => {
+  el.prepend("(")
+  el.append(")")
+})
+
+up.compiler('[trim]', el => {
+  el.innerHTML = el.innerHTML.trim()
 })

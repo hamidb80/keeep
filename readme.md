@@ -19,15 +19,6 @@ Rethinking note taking!
 - [Why note-taking apps don't make us smarter](https://www.platformer.news/why-note-taking-apps-dont-make-us/) 📝
 - [The Failed Promise of Connected Note-Taking Apps](https://redeemingproductivity.com/the-failed-promise-of-connected-note-taking-apps/) 📝
 
-
-## TODO
-- different formulas to score and suggest to remember
-- save in local-storage (can asked to download or import)
-- github pages sharable
-- compress images of size more than treshhild with `.webp` format
-- tag style customize
-- CLI tool like `add-note`, `build`, ...
-
 ## Tech stack
 
 ### Frameworks
