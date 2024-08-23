@@ -1,5 +1,9 @@
 // Utils ---------------------------------------------
 
+function toArray(smth) {
+  return Array.from(smth)
+}
+
 function dedent(text) {
   // removes common indentation from `text`
   const lines = text.split('\n')
@@ -437,6 +441,12 @@ up.compiler('latex', el => {
   katex.render(tex, bdo, opts)
 })
 
+up.compiler('kbd', el => {
+  let bdo = newElement("bdo", { "dir": "ltr" }) // to aviod conflict  with rtl languages
+  bdo.innerHTML = el.innerHTML
+  el.replaceChildren(bdo)
+})
+
 // up.compiler('article', wrapper => {
 //   for (let codeEl of wrapper.querySelectorAll('code')) {
 //     let lang = codeEl.getAttribute("lang")
@@ -476,14 +486,21 @@ up.compiler('article', el => {
 up.compiler('[footnote]', el => {
   footnoteCounter++
 
-  let id = `fn-${footnoteCounter}`
+  let fnid = `fn-${footnoteCounter}`
+  let refid = `ref-${footnoteCounter}`
   let fnwrapper = q`#footnotes`
-  let fnEl = newElement("li", { id }, el.innerHTML)
-  let replEl = newElement("a", { href: `#${id}`, digit: '' })
+  let fnEl = newElement("li", { id: fnid })
+  let replEl = newElement("a", { id: refid, href: `#${fnid}`, digit: '' })
   let sup = newElement("sup", {}, `${footnoteCounter}`)
 
   replEl.appendChild(sup)
   el.outerHTML = replEl.outerHTML
+
+  fnEl.append(newElement("a", { href: `#${refid}` }, "🔼"))
+  console.log(toArray(el.childNodes))
+  let innerFnEl = newElement("div", { dir: "auto", 'class': 'wtf' },)
+  innerFnEl.append(...toArray(el.childNodes))
+  fnEl.append(innerFnEl)
 
   fnwrapper.appendChild(fnEl)
 })

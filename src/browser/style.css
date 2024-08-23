@@ -21,7 +21,8 @@ article figure img {
   font-optical-sizing: auto;
 }
 
-code, code * {
+code,
+code * {
   font-family: "Fira Code";
 }
 
@@ -59,4 +60,8 @@ table th {
 html,
 body {
   min-height: 100vh;
+}
+
+.wtf{
+  direction: auto;
 }
