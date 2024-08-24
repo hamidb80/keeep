@@ -191,7 +191,7 @@ function addNoteReviewHistory(noteId, utime, score, minSecOffset) {
 }
 
 function findNoteItemEl(id) {
-  return q(`[note-id=${id}]`)
+  return q(`[note-id='${id}']`)
 }
 
 // Actions --------------------------------------------
@@ -460,15 +460,15 @@ up.compiler('kbd', el => {
 
 
 up.compiler('pre', el => {
-  el.setAttribute('dir', 'ltr')
   el.classList.add('text-start')
 })
 
 up.compiler('code', el => {
-
   if (el.hasAttribute("block")) {
     el.innerHTML = dedent(el.innerHTML)
   }
+
+  el.setAttribute('dir', 'ltr')
 
   if (el.hasAttribute("lang")) {
     let lang = el.getAttribute("lang")
@@ -486,19 +486,18 @@ up.compiler('article', el => {
 up.compiler('[footnote]', el => {
   footnoteCounter++
 
-  let fnid = `fn-${footnoteCounter}`
-  let refid = `ref-${footnoteCounter}`
+  let fnid = `footnote-ref-${footnoteCounter}`
+  let refid = `footnote-ref-back-${footnoteCounter}`
   let fnwrapper = q`#footnotes`
-  let fnEl = newElement("li", { id: fnid })
-  let replEl = newElement("a", { id: refid, href: `#${fnid}`, digit: '' })
+  let fnEl = newElement("li", { 'class': 'footnote' })
+  let replEl = newElement("a", { id: refid, href: `#${fnid}`, 'class': 'footnote-ref', digit: '' })
   let sup = newElement("sup", {}, `${footnoteCounter}`)
 
   replEl.appendChild(sup)
   el.outerHTML = replEl.outerHTML
 
-  fnEl.append(newElement("a", { href: `#${refid}` }, "🔼"))
-  console.log(toArray(el.childNodes))
-  let innerFnEl = newElement("div", { dir: "auto", 'class': 'wtf' },)
+  fnEl.append(newElement("a", { id: fnid, href: `#${refid}`, 'class': 'footnote-ref-back' }, "🔼"))
+  let innerFnEl = newElement("div", { dir: "auto" },)
   innerFnEl.append(...toArray(el.childNodes))
   fnEl.append(innerFnEl)
 

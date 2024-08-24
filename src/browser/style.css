@@ -47,7 +47,7 @@ table th {
 /* https://getbootstrap.com/docs/5.0/layout/breakpoints/ */
 /* https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries/Using_media_queries */
 @media (width <=576px) {
-  .container {
+  .mobile-container {
     padding: 2px;
     margin: 0;
   }
@@ -62,6 +62,14 @@ body {
   min-height: 100vh;
 }
 
-.wtf{
-  direction: auto;
+.footnote-ref:focus {
+  background-color: aquamarine;
+}
+
+.footnote a:focus+div {
+  background-color: aquamarine;
+}
+
+cite{
+  opacity: 0.7;
 }
