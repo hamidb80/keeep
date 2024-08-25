@@ -70,6 +70,7 @@ const
         build                     Generates static HTML/CSS/JS files in desired directory
         watch                     watch chanes for a single note
         compress-webp [dir] [q]   generates compressed .webp from .png .jpg .jpeg
+        publish                     make world see it!
 
     Usage:
         ./app  init
@@ -144,7 +145,7 @@ proc mkfile(p; content: sink string) =
   mkdir dir
   writeFile str p, content
 
-proc cpdir(src, dest: Path) = 
+proc cpdir(src, dest: Path or string) = 
   copyDir str src, str dest
 
 proc mvFile(a, b: Path) = 
@@ -799,7 +800,14 @@ when isMainModule:
             discard execShellCmd cmd
           else: 
             discard
-          
+
+      of "publish":
+        cpdir "./blog", "../blog"
+        
+        discard execShellCmd "git -C ../blog/ add ."
+        discard execShellCmd "git -C ../blog/ commit -m 'up'"
+        discard execShellCmd "git -C ../blog/ push"
+        
       else:
         echo "Error: Invalid command: '", params[0], "'"
         echo help
