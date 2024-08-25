@@ -151,6 +151,8 @@ proc cpdir(src, dest: Path or string) =
 proc mvFile(a, b: Path) = 
   moveFile str a, str b
 
+proc cliExec(cmd: string) = 
+  discard execShellCmd cmd
 
 func addExt(p; ext: string): Path = 
   ## adds file extention if missing
@@ -797,16 +799,15 @@ when isMainModule:
           of ".png", ".jpg", "jpeg":
             let  cmd = fmt"magick.exe {fpath} -quality {quality} {pfpath.dir/pfpath.name}.webp"
             echo cmd
-            discard execShellCmd cmd
+            cliExec cmd
           else: 
             discard
 
       of "publish":
-        cpdir "./blog", "../blog"
-        
-        discard execShellCmd "git -C ../blog/ add ."
-        discard execShellCmd "git -C ../blog/ commit -m 'up'"
-        discard execShellCmd "git -C ../blog/ push"
+        cpdir   "./blog", "../blog"
+        cliExec "git -C ../blog/ add ."
+        cliExec "git -C ../blog/ commit -m 'up'"
+        cliExec "git -C ../blog/ push"
         
       else:
         echo "Error: Invalid command: '", params[0], "'"
