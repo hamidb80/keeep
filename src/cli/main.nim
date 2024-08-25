@@ -811,6 +811,7 @@ when isMainModule:
         
       else:
         echo "Error: Invalid command: '", params[0], "'"
+        echo "all params: ", params
         echo help
         quit 1
 
