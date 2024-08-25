@@ -65,10 +65,11 @@ const
     ..:: {appname} ::..
 
     Commands:
-        init                  Creates config file
-        new   [path to note]  Creates new note in desired directory
-        build                 Generates static HTML/CSS/JS files in desired directory
-        watch                 watch chanes for a single note
+        init                      Creates config file
+        new   [path to note]      Creates new note in desired directory
+        build                     Generates static HTML/CSS/JS files in desired directory
+        watch                     watch chanes for a single note
+        compress-webp [dir] [q]   generates compressed .webp from .png .jpg .jpeg
 
     Usage:
         ./app  init
@@ -786,6 +787,18 @@ when isMainModule:
         else:
           mkfile notePath,  readfile    $config.blueprintFile
           echo "new note created in: ", $notePath
+
+      of "compress-webp":
+        let quality = parseFloat params[2]
+        for fpath in walkDirRec str params[1]:
+          let pfpath = splitFile fpath
+          case pfpath.ext.toLowerAscii:
+          of ".png", ".jpg", "jpeg":
+            let  cmd = fmt"magick.exe {fpath} -quality {quality} {pfpath.dir/pfpath.name}.webp"
+            echo cmd
+            discard execShellCmd cmd
+          else: 
+            discard
           
       else:
         echo "Error: Invalid command: '", params[0], "'"
