@@ -789,9 +789,9 @@ when isMainModule:
           echo "new note created in: ", $notePath
 
       of "compress-webp":
-        let quality = parseFloat params[2]
-        for fpath in walkDirRec str params[1]:
-          let pfpath = splitFile fpath
+        let quality = parseFloat     params[2]
+        for fpath  in walkDirRec str params[1]:
+          let  pfpath  =  splitFile fpath
           case pfpath.ext.toLowerAscii:
           of ".png", ".jpg", "jpeg":
             let  cmd = fmt"magick.exe {fpath} -quality {quality} {pfpath.dir/pfpath.name}.webp"
