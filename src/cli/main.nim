@@ -2,7 +2,7 @@ import std/[
   xmltree,  json,
   strutils, strformat, sequtils,
   tables, strtabs,
-  os, paths, streams,
+  os, paths, streams, tempfiles,
   algorithm, oids,
   times,
   sugar]
@@ -65,7 +65,6 @@ const
     ..:: {appname} ::..
 
     Commands:
-        init                      Creates config file
         new   [path to note]      Creates new note in desired directory
         build                     Generates static HTML/CSS/JS files in desired directory
         watch                     watch chanes for a single note
@@ -152,6 +151,7 @@ proc mvFile(a, b: Path) =
   moveFile str a, str b
 
 proc cliExec(cmd: string) = 
+  echo    ">>> ",      cmd
   discard execShellCmd cmd
 
 func addExt(p; ext: string): Path = 
@@ -777,9 +777,6 @@ when isMainModule:
           echo "cannot file file in ", $fpath
           quit 1
 
-      of "init":
-        echo "download necessary files from: ..."
-          
       of "new":
         let notePath = addExt(config.notesDir / params[1], ".html")
         
@@ -804,10 +801,15 @@ when isMainModule:
             discard
 
       of "publish":
-        cpdir   "./blog", "../blog"
-        cliExec "git -C ../blog/ add ."
-        cliExec "git -C ../blog/ commit -m 'up'"
-        cliExec "git -C ../blog/ push"
+        let  tdir = createTempDir("website", "pages", "../")
+        
+        cpdir       "./blog", tdir
+        cliExec "git checkout -b pages"
+        cpdir   tdir, "./"
+        cliExec "git add ."
+        cliExec "git commit -m 'up'"
+        cliExec "git push"
+        cliExec "git checkout main"
         
       else:
         echo "Error: Invalid command: '", params[0], "'"
