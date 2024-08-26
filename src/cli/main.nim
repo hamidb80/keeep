@@ -397,7 +397,7 @@ func analyzeArticle(x): ArticleAnalyze =
 func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
   var 
     a  = doc.articleElement
-    aa = analyzeArticle a
+    # aa = analyzeArticle a
 
   proc ctx(key: string): string = 
     case key
@@ -417,13 +417,6 @@ func renderNote(doc: XmlNode, note: NoteItem, templates): XmlNode =
         of   "note-id"    : newText note.id
         of   "note-path"  : newText $note.path
         of   "date"       : newText $note.timestamp
-        of   "custom-deps":
-          var w = newWrapper()
-          # if aa.hasLatex:
-          for lang in aa.programmingLanguages:
-            w.add newXmlTree("script", [], xa {"src": fmt"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/{lang}.min.js"})
-          w
-
         else              : templates.getTemplate tname
 
       else                : 
@@ -759,7 +752,7 @@ when isMainModule:
         echo ">>>> generating HTML file of desired note"
         let        
           templates  = loadHtmlTemplates config.templateFile
-          fpath      = config.notesDir / params[1]
+          fpath      = Path params[1]
 
         if fileExists $fpath:
           var lastModif: Time
@@ -778,14 +771,14 @@ when isMainModule:
           quit 1
 
       of "new":
-        let notePath = addExt(config.notesDir / params[1], ".html")
+        let notePath = Path params[1].addFileExt ".html"
         
         if fileExists $notePath:
           echo "note already exists in ", $notePath
           quit 1
 
         else:
-          mkfile notePath,  readfile    $config.blueprintFile
+          mkfile notePath,  readfile   $config.blueprintFile
           echo "new note created in: ", $notePath
 
       of "compress-webp":
