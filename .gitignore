@@ -1,8 +1,5 @@
-temp/
-dist/
 notes/
-blog/
+temp/
 
 *.exe
 play.*
-config.ini

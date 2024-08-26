@@ -1,9 +1,9 @@
 # Package
 
-version       = "0.1.0"
+version       = "0.0.2"
 author        = "hamidb80"
 description   = "A new awesome nimble package"
-license       = "Unlicenced"
+license       = "MIT"
 srcDir        = "src"
 bin           = @["keeep"]
 

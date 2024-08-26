@@ -2,7 +2,7 @@ import std/[
   xmltree,  json,
   strutils, strformat, sequtils,
   tables, strtabs,
-  os, paths, streams, tempfiles,
+  os, paths, streams,
   algorithm, oids,
   times,
   sugar]
@@ -801,15 +801,9 @@ when isMainModule:
             discard
 
       of "publish":
-        let  tdir = createTempDir("website", "pages", "../")
-        
-        cpdir       "./blog", tdir
-        cliExec "git checkout -b pages"
-        cpdir   tdir, "./"
-        cliExec "git add ."
-        cliExec "git commit -m 'up'"
-        cliExec "git push"
-        cliExec "git checkout main"
+        cliExec fmt"git -C {config.builddir} add ."
+        cliExec fmt"git -C {config.builddir} commit -m 'up'"
+        cliExec fmt"git -C {config.builddir} push"
         
       else:
         echo "Error: Invalid command: '", params[0], "'"
