@@ -68,8 +68,8 @@ const
         new   [path to note]      Creates new note in desired directory
         build                     Generates static HTML/CSS/JS files in desired directory
         watch                     watch chanes for a single note
-        compress-webp [dir] [q]   generates compressed .webp from .png .jpg .jpeg
-        publish                     make world see it!
+        compress ?[dir] ?[q]      generates compressed .webp from .png .jpg .jpeg
+        publish                   make world see it!
 
     Usage:
         ./app  init
@@ -781,9 +781,16 @@ when isMainModule:
           mkfile notePath,  readfile   $config.blueprintFile
           echo "new note created in: ", $notePath
 
-      of "compress-webp":
-        let quality = parseFloat     params[2]
-        for fpath  in walkDirRec str params[1]:
+      of "compress":
+        let
+          dir     = 
+            if params.len > 1: Path   params[1] 
+            else:              config.notesDir
+          quality = 
+            if params.len > 2: parseFloat params[2]
+            else:              1.0
+
+        for fpath  in walkDirRec str dir:
           let  pfpath  =  splitFile fpath
           case pfpath.ext.toLowerAscii:
           of ".png", ".jpg", "jpeg":
