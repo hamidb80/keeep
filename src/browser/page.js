@@ -490,7 +490,7 @@ up.compiler('[footnote]', el => {
   let refid = `footnote-ref-back-${footnoteCounter}`
   let fnwrapper = q`#footnotes`
   let fnEl = newElement("li", { 'class': 'footnote' })
-  let replEl = newElement("a", { id: refid, href: `#${fnid}`, 'class': 'footnote-ref', digit: '' })
+  let replEl = newElement("a", { id: refid, href: `#${fnid}`, 'class': 'footnote-ref' })
   let sup = newElement("sup", {}, `${footnoteCounter}`)
 
   replEl.appendChild(sup)
