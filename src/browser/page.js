@@ -139,56 +139,7 @@ function replaceQueryParams(qparams) {
   return window.history.pushState({}, {}, "?" + search.toString())
 }
 
-// DataBase -------------------------------------------
-
-// ----- low level
-
-function clearDB() {
-  window.localStorage.clear()
-}
-
-function missingItemDB(key) {
-  return window.localStorage.getItem(key) === null
-}
-function existsItemDB(key) {
-  return !missingItemDB(key)
-}
-
-function getItemDB(key) {
-  return JSON.parse(window.localStorage.getItem(key))
-}
-function setItemDB(key, val) {
-  return window.localStorage.setItem(key, JSON.stringify(val))
-}
-
-function getAllItemsDB() {
-  let result = {}
-  for (let i = 0; i < window.localStorage.length; i++) {
-    let key = window.localStorage.key(i)
-    let valueStr = window.localStorage.getItem(key)
-    result[key] = JSON.parse(valueStr)
-  }
-  return result
-}
-
 // ----- domain level
-
-function getNoteReviewHistory(noteId) {
-  return getItemDB(noteId) ?? []
-}
-
-function addNoteReviewHistory(noteId, utime, score, minSecOffset) {
-  let snap = [utime, score]
-  let history = getNoteReviewHistory(noteId)
-
-  if ((0 < history.length) && (utime - last(history)[0] < minSecOffset))
-    history.pop()
-
-  history.push(snap)
-  setItemDB(noteId, history)
-
-  return history
-}
 
 function findNoteItemEl(id) {
   return q(`[note-id='${id}']`)
@@ -202,9 +153,8 @@ function findNoteItemEl(id) {
 
 const debouceDelay = 600
 const scoreFunctions = {
-  'creation date': (now, created, note, history) => created,
-  'passed time': (now, created, note, history) => now - created,
-  'history len': (now, created, note, history) => history.length,
+  'creation date': (now, created, note) => created,
+  'passed time': (now, created, note) => now - created,
 }
 
 
@@ -315,30 +265,6 @@ up.compiler('#suggested-tags .btn', el => {
   }
 })
 
-up.compiler('#import-db-btn', el => {
-  el.onclick = () => {
-    let target = newElement('input', { type: "file", accept: ".json" })
-    target.click()
-  }
-})
-
-up.compiler('#export-db-btn', el => {
-  el.onclick = () => {
-    downloadFile(
-      'keep-data.json',
-      'application/json',
-      JSON.stringify(getAllItemsDB()))
-  }
-})
-
-up.compiler('#clear-db-btn', el => {
-  el.onclick = () => {
-    if (confirm("Are you sure?")) {
-      clearDB()
-    }
-  }
-})
-
 up.compiler('#read-search-queries-from-url', () => {
   let si = searchInputs()
   let qp = getQueryParams()
@@ -355,8 +281,7 @@ up.compiler('#score-functions-input', select => {
     current_score_function = select.value
     let fn = scoreFunctions[select.value]
     let coeff = (q`#inverse-result-checkbox`.checked ? -1 : +1)
-    let acc = mapObjAcc(allNotes,
-      (id, note) => [id, coeff * fn(now, note.timestamp, note, getNoteReviewHistory(id))]) // [id, score]
+    let acc = mapObjAcc(allNotes, (id, note) => [id, coeff * fn(now, note.timestamp, note)]) // [id, score]
 
     acc.sort((a, b) => b[1] - a[1]) // sort by score
 
@@ -380,21 +305,11 @@ up.compiler('#score-functions-input', select => {
 })
 
 up.compiler('#inverse-result-checkbox', input => {
-  input.onchange = () => {
-    let t = input.checked
-    let select = q`#score-functions-input`
-    select.onchange()
-  }
+  input.onchange = (q`#score-functions-input`).onchange
 })
 
 up.compiler('.note-view', el => {
   currentNoteId = el.getAttribute('note-id')
-})
-
-up.compiler('[name=note-review-btn]', input => {
-  input.onchange = () => {
-    addNoteReviewHistory(currentNoteId, unixNow(), parseInt(input.value), 10)
-  }
 })
 
 up.compiler('[path-breadcrumb]', el => {

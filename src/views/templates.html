@@ -11,8 +11,7 @@
     </title>
   </head>
 
-  <body class="bg-light">
-
+  <body class="bg-light pb-4">
     <main>
       <use template="navbar"></use>
 
@@ -48,63 +47,6 @@
               <use template="tags"></use>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div class="container">
-        <div class="d-flex justify-content-center my-3">
-          <div class="btn-group">
-            <input type="radio" class="btn-check" name="note-review-btn" id="btnradio1" value="-1" />
-            <label class="btn btn-outline-danger" for="btnradio1">Poor</label>
-
-            <input type="radio" class="btn-check" name="note-review-btn" id="btnradio2" value="0" />
-            <label class="btn btn-outline-warning" for="btnradio2">So-So</label>
-
-            <input type="radio" class="btn-check" name="note-review-btn" id="btnradio3" value="+1" />
-            <label class="btn btn-outline-success" for="btnradio3">Good</label>
-          </div>
-        </div>
-
-        <div class="my-4">
-          <h4>
-            <i class="bi bi-clock-history"></i>
-            <span>
-              Review History
-            </span>
-          </h4>
-
-          <div class="table-wrapper">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>
-                    <span>
-                      Date
-                    </span>
-                  </th>
-                  <th>
-                    <span>
-                      Score
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- TODO to be filled at runtime -->
-                <template>
-                  <tr>
-                    <td>
-                      <slot name="date" />
-                    </td>
-                    <td>
-                      <slot name="score" />
-                    </td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-          </div>
-
         </div>
       </div>
     </main>
