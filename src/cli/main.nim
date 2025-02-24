@@ -492,19 +492,6 @@ func `notes.html`(templates, notes; suggestedTags: seq[HashTag]): XmlNode =
   result = newHtmlDoc()
   map result, t, identityXml
 
-func `index.html`(templates): XmlNode = 
-  let t = templates.getTemplate"index-page"
-
-  func identityXml(x): XmlNode = 
-    if x.isElement: 
-      case  x.tag
-      of    "use"          : templates.getTemplate x.attr"template"
-      else                 : shallowCopy x
-    else                   : x
-
-  result = newHtmlDoc()
-  map result, t, identityXml
-
 func `info.html`(templates; tagsCount: CountTable[string], totalNotes: Natural): XmlNode = 
   let t = templates.getTemplate"info-page"
 
@@ -676,9 +663,7 @@ proc genWebsite(templates, config; notesPaths: seq[Path], demo: bool) =
     let suggestedTags = tagsCount.keys.toseq.mapit initHashTag(it, "")
 
     echo "+ index.html"
-    writeHtml saveDir/"index.html",    fixUrls(Path"", config.baseUrl, libNameMap, `index.html`(templates))
-    echo "+ notes.html"
-    writeHtml saveDir/"notes.html",    fixUrls(Path"", config.baseUrl, libNameMap, `notes.html`(templates, notes, suggestedTags))
+    writeHtml saveDir/"index.html",    fixUrls(Path"", config.baseUrl, libNameMap, `notes.html`(templates, notes, suggestedTags))
     echo "+ info.html"
     writeHtml saveDir/"info.html",     fixUrls(Path"", config.baseUrl, libNameMap, `info.html`(templates, tagsCount, len notes))
     echo "+ feed.rss"
