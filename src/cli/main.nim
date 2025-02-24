@@ -505,19 +505,6 @@ func `index.html`(templates): XmlNode =
   result = newHtmlDoc()
   map result, t, identityXml
 
-func `profile.html`(templates): XmlNode = 
-  let t = templates.getTemplate"profile-page"
-
-  func identityXml(x): XmlNode = 
-    if x.isElement: 
-      case  x.tag
-      of    "use": templates.getTemplate x.attr"template"
-      else       : shallowCopy x
-    else         : x
-
-  result = newHtmlDoc()
-  map result, t, identityXml
-
 func `info.html`(templates; tagsCount: CountTable[string], totalNotes: Natural): XmlNode = 
   let t = templates.getTemplate"info-page"
 
@@ -692,8 +679,6 @@ proc genWebsite(templates, config; notesPaths: seq[Path], demo: bool) =
     writeHtml saveDir/"index.html",    fixUrls(Path"", config.baseUrl, libNameMap, `index.html`(templates))
     echo "+ notes.html"
     writeHtml saveDir/"notes.html",    fixUrls(Path"", config.baseUrl, libNameMap, `notes.html`(templates, notes, suggestedTags))
-    echo "+ profile.html"
-    writeHtml saveDir/"profile.html",  fixUrls(Path"", config.baseUrl, libNameMap, `profile.html`(templates))
     echo "+ info.html"
     writeHtml saveDir/"info.html",     fixUrls(Path"", config.baseUrl, libNameMap, `info.html`(templates, tagsCount, len notes))
     echo "+ feed.rss"

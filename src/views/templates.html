@@ -220,72 +220,6 @@
   </body>
 </template>
 
-<template name="profile-page">
-
-  <head>
-    <use template="common-meta"></use>
-    <use template="deps"></use>
-    <use template="local-deps"></use>
-    <title>
-      👤 Profile
-    </title>
-  </head>
-
-  <body class="bg-light">
-    <main>
-      <use template="navbar"></use>
-
-      <div class="container">
-        <h1 class="text-center">
-          <i class="bi bi-person-square"></i>
-          <span>Profile</span>
-        </h1>
-        <div class="my-4">
-          <section class="my-3">
-            <h3>
-              <i class="bi bi-nut"></i>
-              <span>
-                Actions
-              </span>
-            </h3>
-
-            <button class="btn btn-outline-primary my-1" id="import-db-btn">
-              <i class="bi bi-box-arrow-in-right"></i>
-              <span>
-                Import Data (merge)
-              </span>
-            </button>
-
-            <button class="btn btn-outline-primary my-1" id="export-db-btn">
-              <i class="bi bi-box-arrow-right"></i>
-              <span>
-                Export Data (download)
-              </span>
-            </button>
-
-            <button class="btn btn-outline-primary my-1" id="clear-db-btn">
-              <i class="bi bi-trash2"></i>
-              <span>
-                Clear Data
-              </span>
-            </button>
-
-          </section>
-          <section class="my-3">
-            <h3>
-              <i class="bi bi-graph-up"></i>
-              <span>
-                Activity
-              </span>
-            </h3>
-          </section>
-        </div>
-      </div>
-
-    </main>
-  </body>
-</template>
-
 <template name="info-page">
 
   <head>
@@ -466,12 +400,6 @@
         <a class="nav-link" href="@/notes.html" smooth-link>
           <i class="bi bi-stickies"></i>
           <span>Notes</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="@/profile.html" smooth-link>
-          <i class="bi bi-person-square"></i>
-          <span>Profile</span>
         </a>
       </li>
       <li class="nav-item">
